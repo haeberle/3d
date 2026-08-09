@@ -14,6 +14,12 @@
     --text: #e8eaf0; --muted: #6b7280; --success: #22c55e;
     --error: #ef4444; --radius: 10px; --font: 'Inter', system-ui, sans-serif;
   }
+  :root.light {
+    --bg: #f0f2f7; --surface: #ffffff; --surface2: #e8ecf4;
+    --border: #d0d6e8; --accent: #3366ff; --accent2: #6c2bd9;
+    --text: #1a1d2e; --muted: #6b7280; --success: #16a34a;
+    --error: #dc2626;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding: 1.5rem 1rem 4rem; }
   .page-wrap { display: flex; flex-direction: column; align-items: center; }
@@ -25,6 +31,10 @@
   .top-right { display: flex; align-items: center; gap: 10px; }
 
   /* Language selector */
+  /* Theme toggle */
+  .theme-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 15px; cursor: pointer; transition: border-color 0.15s; line-height: 1; }
+  .theme-btn:hover { border-color: var(--accent); }
+
   .lang-selector { position: relative; }
   .lang-btn { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s; }
   .lang-btn:hover { border-color: var(--accent); }
@@ -166,6 +176,7 @@
     STL → 3MF
   </div>
   <div class="top-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" data-i18n-title="theme_toggle" title="Toggle light/dark mode">🌙</button>
     <div class="lang-selector">
       <div class="lang-btn" onclick="toggleLangDropdown(event)">
         <span id="lang-flag">🇬🇧</span>
@@ -200,7 +211,7 @@
           <h2 data-i18n="filament_per_part">Filament per part</h2>
           <div style="display:flex;align-items:center;gap:8px;">
             <span id="parts-count"></span>
-            <button onclick="resetParts()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:2px 8px;font-size:0.72rem;cursor:pointer;" title="Clear all parts" data-i18n-title="clear_all">✕</button>
+            <button onclick="resetParts()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:2px 8px;font-size:0.72rem;cursor:pointer;" data-i18n-title="clear_all" title="Clear all parts">✕</button>
           </div>
         </div>
         <div class="bulk-row">
@@ -230,7 +241,7 @@
       <div id="filename-row" class="filename-row" style="display:none;">
         <input type="text" id="filename-input" spellcheck="false" data-i18n-placeholder="filename_ph">
         <span class="ext">.3mf</span>
-        <button class="shuffle-btn" onclick="generateName()" title="Random name">🎲</button>
+        <button class="shuffle-btn" onclick="generateName()" data-i18n-title="random_name">🎲</button>
       </div>
 
       <button id="build-btn" onclick="build3MF()">
@@ -296,6 +307,10 @@ const LANGS = {
     processing:'Processing…', creating_zip:'Creating ZIP…',
     downloaded:f=>`✓ ${f} downloaded!`, error:e=>`Error: ${e}`,
     parts_count:n=>`${n} parts`,
+    remove_part:'Remove part',
+    random_name:'Random name',
+    theme_toggle:'Toggle light/dark mode',
+    clear_all:'Clear all parts',
   },
   de: {
     flag:'🇩🇪', code:'DE',
@@ -314,6 +329,10 @@ const LANGS = {
     processing:'Verarbeite Dateien…', creating_zip:'ZIP wird erstellt…',
     downloaded:f=>`✓ ${f} heruntergeladen!`, error:e=>`Fehler: ${e}`,
     parts_count:n=>`${n} Teile`,
+    remove_part:'Teil entfernen',
+    random_name:'Zufälliger Name',
+    theme_toggle:'Hell/Dunkel umschalten',
+    clear_all:'Alle löschen',
   },
   fr: {
     flag:'🇫🇷', code:'FR',
@@ -332,6 +351,10 @@ const LANGS = {
     processing:'Traitement…', creating_zip:'Création ZIP…',
     downloaded:f=>`✓ ${f} téléchargé!`, error:e=>`Erreur: ${e}`,
     parts_count:n=>`${n} pièces`,
+    remove_part:'Supprimer la pièce',
+    random_name:'Nom aléatoire',
+    theme_toggle:'Basculer clair/sombre',
+    clear_all:'Tout effacer',
   },
   it: {
     flag:'🇮🇹', code:'IT',
@@ -350,6 +373,10 @@ const LANGS = {
     processing:'Elaborazione…', creating_zip:'Creazione ZIP…',
     downloaded:f=>`✓ ${f} scaricato!`, error:e=>`Errore: ${e}`,
     parts_count:n=>`${n} parti`,
+    remove_part:'Rimuovi parte',
+    random_name:'Nome casuale',
+    theme_toggle:'Alterna chiaro/scuro',
+    clear_all:'Cancella tutto',
   },
   es: {
     flag:'🇪🇸', code:'ES',
@@ -368,6 +395,10 @@ const LANGS = {
     processing:'Procesando…', creating_zip:'Creando ZIP…',
     downloaded:f=>`✓ ${f} descargado!`, error:e=>`Error: ${e}`,
     parts_count:n=>`${n} piezas`,
+    remove_part:'Eliminar pieza',
+    random_name:'Nombre aleatorio',
+    theme_toggle:'Alternar claro/oscuro',
+    clear_all:'Borrar todo',
   },
 };
 
@@ -384,6 +415,14 @@ function applyLang() {
     const key = el.getAttribute('data-i18n-placeholder');
     if (T[key]) el.placeholder = T[key];
   });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (T[key] && typeof T[key] === 'string') el.title = T[key];
+  });
+  const themebtn = document.getElementById('theme-btn');
+  if(themebtn) themebtn.title = T.theme_toggle || 'Toggle light/dark';
+  // Update dynamic remove buttons
+  document.querySelectorAll('.remove-btn').forEach(b => b.title = T.remove_part || 'Remove');
   document.getElementById('lang-flag').textContent = T.flag;
   document.querySelectorAll('.lang-option').forEach(o => o.classList.toggle('active', o.dataset.lang === currentLang));
   // Update dynamic texts
@@ -516,7 +555,7 @@ function renderParts() {
     swatch.style.background=FILAMENTS[Math.min(p.filament-1,FILAMENTS.length-1)].color;
     const nameEl=document.createElement('div'); nameEl.className='part-name'; nameEl.textContent=p.name; nameEl.title=p.name;
     const filWrap=makeFildropdown(i);
-    const rm=document.createElement('button'); rm.className='remove-btn'; rm.title='Remove';
+    const rm=document.createElement('button'); rm.className='remove-btn'; rm.title=T.remove_part||'Remove';
     rm.innerHTML='<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
     rm.addEventListener('click',()=>{parts.splice(i,1);renderParts();updateViewer();if(!parts.length)hideParts();});
     row.addEventListener('click',e=>{
@@ -775,6 +814,30 @@ function build3MF(){
   },50);
 }
 
+// ── Theme ────────────────────────────────────────────────────────
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('stl3mf-theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-btn').textContent = isLight ? '☀️' : '🌙';
+  // Update Three.js background
+  if(renderer) renderer.setClearColor(isLight ? 0xf0f2f7 : 0x0f1117, 1);
+  // Update grid color
+  if(gridHelper) {
+    const gc = isLight ? 0xd0d6e8 : 0x2e3350;
+    gridHelper.material && (gridHelper.material.color = new THREE.Color(gc));
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('stl3mf-theme');
+  const preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  const useLight = saved ? saved === 'light' : preferLight;
+  if(useLight) {
+    document.documentElement.classList.add('light');
+    document.getElementById('theme-btn').textContent = '☀️';
+  }
+}
+
 // ── Init ─────────────────────────────────────────────────────────
 buildBulkDropdown();
 applyLang();
@@ -786,7 +849,10 @@ document.getElementById('sync-cb').checked=syncEnabled;
 localStorage.setItem('stl3mf-sync', syncEnabled?'1':'0');
 
 // Init viewer (always visible)
+initTheme();
 initViewer();
+// Apply correct bg to renderer after init
+if(renderer) renderer.setClearColor(document.documentElement.classList.contains('light') ? 0xf0f2f7 : 0x0f1117, 1);
 document.getElementById('viewer-empty').style.display='block';
 </script>
 </body>
