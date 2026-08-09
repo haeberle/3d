@@ -72,6 +72,13 @@
   #status.ok { color: var(--success); }
   #status.err { color: var(--error); }
 
+  .filename-row { display: flex; align-items: center; gap: 8px; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+  .filename-row input { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; font-family: var(--font); transition: border-color 0.15s; }
+  .filename-row input:focus { outline: none; border-color: var(--accent); }
+  .filename-row .ext { color: var(--muted); font-size: 0.82rem; flex-shrink: 0; }
+  .filename-row .shuffle-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 14px; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
+  .filename-row .shuffle-btn:hover { border-color: var(--accent); color: var(--text); }
+
   footer { margin-top: 2rem; font-size: 0.75rem; color: var(--muted); text-align: center; }
   @media (max-width: 400px) { .part-row select { width: 90px; } }
 </style>
@@ -127,6 +134,12 @@
     </div>
   </div>
 
+  <div id="filename-row" class="filename-row" style="display:none;">
+    <input type="text" id="filename-input" placeholder="Dateiname…" spellcheck="false">
+    <span class="ext">.3mf</span>
+    <button class="shuffle-btn" onclick="generateName()" title="Zufälliger Name">🎲</button>
+  </div>
+
   <button id="build-btn" onclick="build3MF()">
     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     3MF erstellen & herunterladen
@@ -135,7 +148,7 @@
   <div id="status"></div>
 </div>
 
-<footer>Läuft lokal im Browser · keine Daten werden hochgeladen</footer>
+
 
 <script>
 // Generate 100 filament colors using HSL spread
@@ -261,12 +274,15 @@ function renderParts() {
 
   document.getElementById('parts-section').style.display = 'block';
   document.getElementById('options-section').style.display = 'block';
+  document.getElementById('filename-row').style.display = 'flex';
+  if (!document.getElementById('filename-input').value) generateName();
   const btn = document.getElementById('build-btn');
   btn.style.display = 'flex';
 }
 
 function hideParts() {
   document.getElementById('parts-section').style.display = 'none';
+  document.getElementById('filename-row').style.display = 'none';
   document.getElementById('build-btn').style.display = 'none';
   setStatus('');
 }
@@ -312,7 +328,11 @@ function parseASCII(text) {
   return tris;
 }
 
-function getZMin(tris) { return Math.min(...tris.flatMap(t => t.map(v => v[2]))); }
+function getZMin(tris) {
+  let zMin = Infinity;
+  for (const t of tris) for (const v of t) if (v[2] < zMin) zMin = v[2];
+  return zMin;
+}
 
 function meshXML(tris, id, name, zOff) {
   const vm = new Map(); const verts = []; const ti = [];
@@ -331,6 +351,17 @@ function meshXML(tris, id, name, zOff) {
   return `    <object id="${id}" type="model" name="${name}">\n      <mesh>\n        <vertices>\n${vx}\n        </vertices>\n        <triangles>\n${tx}\n        </triangles>\n      </mesh>\n    </object>`;
 }
 
+// Word lists for creative 3MF names
+const ADJ = ['Kobalt','Titan','Neon','Plasma','Pixel','Karbon','Quarz','Opal','Mango','Smaragd','Kupfer','Saphir','Koralle','Onyx','Lazur','Indigo','Granat','Topaz','Zinn','Jade'];
+const NOUN = ['Drache','Kompass','Stern','Gipfel','Orbit','Falke','Prisma','Nexus','Echo','Vortex','Apex','Zenit','Puls','Kern','Riff','Atlas','Turm','Klinge','Kuppel','Matrix'];
+
+function generateName() {
+  const adj = ADJ[Math.floor(Math.random() * ADJ.length)];
+  const noun = NOUN[Math.floor(Math.random() * NOUN.length)];
+  const num = Math.floor(Math.random() * 90) + 10;
+  document.getElementById('filename-input').value = adj + noun + '-' + num;
+}
+
 function build3MF() {
   const btn = document.getElementById('build-btn');
   btn.disabled = true;
@@ -343,7 +374,8 @@ function build3MF() {
 
       let globalOffset = 0;
       if (keepZ) {
-        const zMin = Math.min(...allTris.map(t => getZMin(t)));
+        let zMin = Infinity;
+        for (const t of allTris) { const z = getZMin(t); if (z < zMin) zMin = z; }
         globalOffset = -zMin;
       }
 
@@ -368,7 +400,8 @@ function build3MF() {
       zip.file('3D/3dmodel.model', model);
       zip.file('Metadata/model_settings.config', config);
 
-      const fname = (parts.length === 1 ? parts[0].name : 'multicolor') + '.3mf';
+      const inputName = document.getElementById('filename-input').value.trim();
+      const fname = (inputName || (parts.length === 1 ? parts[0].name : 'multicolor')) + '.3mf';
       zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then(blob => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -384,5 +417,9 @@ function build3MF() {
   }, 50);
 }
 </script>
+<footer style="margin-top: 2rem; font-size: 0.75rem; color: var(--muted); text-align: center; line-height: 1.8;">
+  © eberle.cc · Released under the <a href="https://opensource.org/licenses/MIT" target="_blank" style="color: var(--accent); text-decoration: none;">MIT Open Source License</a><br>
+  No warranty is provided. Use this tool at your own risk.
+</footer>
 </body>
 </html>
