@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STL → Multicolor 3MF</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+    --border: #2e3350; --accent: #4f7fff; --accent2: #7c3aed;
+    --text: #e8eaf0; --muted: #6b7280; --success: #22c55e;
+    --error: #ef4444; --radius: 10px; --font: 'Inter', system-ui, sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem 4rem; }
+  header { text-align: center; margin-bottom: 2.5rem; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.4rem; }
+  .logo svg { -webkit-text-fill-color: initial; }
+  header p { color: var(--muted); font-size: 0.9rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 580px; margin-bottom: 1rem; }
+  #drop-zone { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 2.5rem 1rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  #drop-zone:hover, #drop-zone.over { border-color: var(--accent); background: rgba(79,127,255,0.05); }
+  #drop-zone input { display: none; }
+  .upload-icon { width: 44px; height: 44px; margin: 0 auto 0.75rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .upload-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; }
+  #drop-zone h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+  #drop-zone p { font-size: 0.8rem; color: var(--muted); }
+
+  #parts-section { display: none; margin-top: 1.5rem; }
+  .parts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .parts-header h2 { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .parts-header span { font-size: 0.78rem; color: var(--muted); }
+
+  /* Scrollable list for many parts */
+  #parts-container { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+  #parts-container::-webkit-scrollbar { width: 4px; }
+  #parts-container::-webkit-scrollbar-track { background: transparent; }
+  #parts-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .part-row { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; transition: border-color 0.15s; }
+  .part-row:hover { border-color: var(--accent); }
+  .part-num { font-size: 0.72rem; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; }
+  .part-swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); flex-shrink: 0; transition: transform 0.15s; }
+  .part-row:hover .part-swatch { transform: scale(1.15); }
+  .part-name { flex: 1; font-size: 0.82rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .part-row select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; font-size: 0.8rem; cursor: pointer; width: 120px; flex-shrink: 0; }
+  .part-row select:focus { outline: none; border-color: var(--accent); }
+  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 3px; border-radius: 4px; display: flex; align-items: center; transition: color 0.15s; flex-shrink: 0; }
+  .remove-btn:hover { color: var(--error); }
+  .remove-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+  /* Bulk assign */
+  .bulk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .bulk-row label { font-size: 0.8rem; color: var(--muted); }
+  .bulk-row select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer; }
+  .bulk-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s; }
+  .bulk-btn:hover { border-color: var(--accent); }
+
+  #options-section { display: none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+  .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; cursor: pointer; }
+  .toggle-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+  .toggle-row .hint { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  #build-btn { display: none; width: 100%; padding: 13px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: var(--radius); font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 1.5rem; transition: opacity 0.2s, transform 0.1s; align-items: center; justify-content: center; gap: 8px; }
+  #build-btn:hover:not(:disabled) { opacity: 0.9; }
+  #build-btn:active:not(:disabled) { transform: scale(0.99); }
+  #build-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #build-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; }
+
+  #status { margin-top: 1rem; font-size: 0.82rem; text-align: center; min-height: 20px; color: var(--muted); transition: color 0.2s; }
+  #status.ok { color: var(--success); }
+  #status.err { color: var(--error); }
+
+  footer { margin-top: 2rem; font-size: 0.75rem; color: var(--muted); text-align: center; }
+  @media (max-width: 400px) { .part-row select { width: 90px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#g)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4f7fff"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+      <line x1="12" y1="22.08" x2="12" y2="12"/>
+    </svg>
+    STL → 3MF
+  </div>
+  <p>Bis zu 100 STL-Dateien zu einer Multicolor 3MF zusammenfügen</p>
+</header>
+
+<div class="card">
+  <div id="drop-zone">
+    <input type="file" id="file-input" multiple accept=".stl">
+    <div class="upload-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h3>STL-Dateien hier ablegen</h3>
+    <p>oder klicken zum Auswählen · bis zu 100 Dateien</p>
+  </div>
+
+  <div id="parts-section">
+    <div class="parts-header">
+      <h2>Filament pro Teil</h2>
+      <span id="parts-count"></span>
+    </div>
+
+    <!-- Bulk assign -->
+    <div class="bulk-row">
+      <label>Alle auf:</label>
+      <select id="bulk-select"></select>
+      <button class="bulk-btn" onclick="bulkAssign()">Zuweisen</button>
+    </div>
+
+    <div id="parts-container"></div>
+
+    <div id="options-section">
+      <label class="toggle-row">
+        <input type="checkbox" id="keep-z" checked>
+        <div>
+          <div>Originale Z-Positionen beibehalten</div>
+          <div class="hint">Teile bleiben räumlich zusammengefügt wie im Design</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <button id="build-btn" onclick="build3MF()">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    3MF erstellen & herunterladen
+  </button>
+
+  <div id="status"></div>
+</div>
+
+<footer>Läuft lokal im Browser · keine Daten werden hochgeladen</footer>
+
+<script>
+// Generate 100 filament colors using HSL spread
+function generateFilaments(n) {
+  const fixed = [
+    '#e63946','#f1faee','#457b9d','#f4d03f',
+    '#2ecc71','#f39c12','#9b59b6','#2c3e50',
+    '#00bcd4','#ff5722','#795548','#607d8b',
+    '#e91e63','#3f51b5','#009688','#ff9800',
+  ];
+  const result = [];
+  for (let i = 0; i < n; i++) {
+    if (i < fixed.length) {
+      result.push({ label: String(i+1), color: fixed[i] });
+    } else {
+      const hue = Math.round((i * 137.508) % 360); // golden angle
+      result.push({ label: String(i+1), color: `hsl(${hue},70%,55%)` });
+    }
+  }
+  return result;
+}
+
+const MAX_PARTS = 100;
+const FILAMENTS = generateFilaments(MAX_PARTS);
+
+let parts = [];
+
+// Populate bulk select
+const bulkSel = document.getElementById('bulk-select');
+FILAMENTS.forEach((f, i) => {
+  const o = document.createElement('option');
+  o.value = i + 1;
+  o.textContent = 'Filament ' + f.label;
+  bulkSel.appendChild(o);
+});
+
+function bulkAssign() {
+  const val = parseInt(bulkSel.value);
+  parts.forEach((p, i) => {
+    p.filament = val;
+    const sw = document.getElementById('sw-' + i);
+    const sel = document.getElementById('sel-' + i);
+    if (sw) sw.style.background = FILAMENTS[val-1].color;
+    if (sel) sel.value = val;
+  });
+}
+
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('over'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+function handleFiles(files) {
+  const stls = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.stl'));
+  if (!stls.length) { setStatus('Keine STL-Dateien erkannt.', 'err'); return; }
+  if (parts.length + stls.length > MAX_PARTS) {
+    setStatus(`Maximum ${MAX_PARTS} Dateien erlaubt. Aktuell: ${parts.length}`, 'err'); return;
+  }
+  setStatus('Dateien werden gelesen…');
+  const promises = stls.map(f => new Promise(res => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      parts.push({ name: f.name.replace(/\.stl$/i, ''), buffer: e.target.result, filament: (parts.length % 4) + 1 });
+      res();
+    };
+    reader.readAsArrayBuffer(f);
+  }));
+  Promise.all(promises).then(() => { renderParts(); setStatus(parts.length + ' Datei(en) geladen.', 'ok'); });
+}
+
+function renderParts() {
+  const c = document.getElementById('parts-container');
+  c.innerHTML = '';
+  document.getElementById('parts-count').textContent = parts.length + ' Teile';
+
+  parts.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'part-row';
+
+    const num = document.createElement('div');
+    num.className = 'part-num';
+    num.textContent = i + 1;
+
+    const swatch = document.createElement('div');
+    swatch.className = 'part-swatch';
+    swatch.id = 'sw-' + i;
+    swatch.style.background = FILAMENTS[Math.min(p.filament-1, FILAMENTS.length-1)].color;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'part-name';
+    nameEl.textContent = p.name;
+    nameEl.title = p.name;
+
+    const sel = document.createElement('select');
+    sel.id = 'sel-' + i;
+    // Only show filaments 1-16 in dropdown for usability; user can type more if needed
+    const showCount = Math.min(MAX_PARTS, 16);
+    FILAMENTS.slice(0, showCount).forEach((f, j) => {
+      const o = document.createElement('option');
+      o.value = j + 1;
+      o.textContent = 'Filament ' + f.label;
+      if (j + 1 === p.filament) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => {
+      parts[i].filament = parseInt(sel.value);
+      document.getElementById('sw-' + i).style.background = FILAMENTS[parts[i].filament - 1].color;
+    });
+
+    const rm = document.createElement('button');
+    rm.className = 'remove-btn';
+    rm.title = 'Entfernen';
+    rm.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+    rm.addEventListener('click', () => { parts.splice(i, 1); renderParts(); if (!parts.length) hideParts(); });
+
+    row.appendChild(num); row.appendChild(swatch); row.appendChild(nameEl); row.appendChild(sel); row.appendChild(rm);
+    c.appendChild(row);
+  });
+
+  document.getElementById('parts-section').style.display = 'block';
+  document.getElementById('options-section').style.display = 'block';
+  const btn = document.getElementById('build-btn');
+  btn.style.display = 'flex';
+}
+
+function hideParts() {
+  document.getElementById('parts-section').style.display = 'none';
+  document.getElementById('build-btn').style.display = 'none';
+  setStatus('');
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type || '';
+}
+
+function parseSTL(buffer) {
+  const bytes = new Uint8Array(buffer, 0, 80);
+  const header = String.fromCharCode(...bytes).trimStart();
+  if (header.startsWith('solid')) {
+    try { return parseASCII(new TextDecoder().decode(buffer)); } catch(e) {}
+  }
+  return parseBinary(buffer);
+}
+
+function parseBinary(buf) {
+  const v = new DataView(buf);
+  const n = v.getUint32(80, true);
+  const tris = [];
+  let o = 84;
+  for (let i = 0; i < n; i++) {
+    tris.push([
+      [v.getFloat32(o+12,true), v.getFloat32(o+16,true), v.getFloat32(o+20,true)],
+      [v.getFloat32(o+24,true), v.getFloat32(o+28,true), v.getFloat32(o+32,true)],
+      [v.getFloat32(o+36,true), v.getFloat32(o+40,true), v.getFloat32(o+44,true)],
+    ]);
+    o += 50;
+  }
+  return tris;
+}
+
+function parseASCII(text) {
+  const tris = []; const re = /vertex\s+([\d.eE+\-]+)\s+([\d.eE+\-]+)\s+([\d.eE+\-]+)/g;
+  let m, vs = [];
+  while ((m = re.exec(text)) !== null) {
+    vs.push([parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]);
+    if (vs.length === 3) { tris.push([...vs]); vs = []; }
+  }
+  return tris;
+}
+
+function getZMin(tris) { return Math.min(...tris.flatMap(t => t.map(v => v[2]))); }
+
+function meshXML(tris, id, name, zOff) {
+  const vm = new Map(); const verts = []; const ti = [];
+  for (const tri of tris) {
+    const idx = [];
+    for (const v of tri) {
+      const x = Math.round(v[0]*1e4)/1e4, y = Math.round(v[1]*1e4)/1e4, z = Math.round((v[2]+zOff)*1e4)/1e4;
+      const k = `${x},${y},${z}`;
+      if (!vm.has(k)) { vm.set(k, verts.length); verts.push([x,y,z]); }
+      idx.push(vm.get(k));
+    }
+    ti.push(idx);
+  }
+  const vx = verts.map(v => `          <vertex x="${v[0]}" y="${v[1]}" z="${v[2]}"/>`).join('\n');
+  const tx = ti.map(t => `          <triangle v1="${t[0]}" v2="${t[1]}" v3="${t[2]}"/>`).join('\n');
+  return `    <object id="${id}" type="model" name="${name}">\n      <mesh>\n        <vertices>\n${vx}\n        </vertices>\n        <triangles>\n${tx}\n        </triangles>\n      </mesh>\n    </object>`;
+}
+
+function build3MF() {
+  const btn = document.getElementById('build-btn');
+  btn.disabled = true;
+  setStatus('STL-Dateien werden verarbeitet…');
+
+  setTimeout(() => {
+    try {
+      const keepZ = document.getElementById('keep-z').checked;
+      const allTris = parts.map(p => parseSTL(p.buffer));
+
+      let globalOffset = 0;
+      if (keepZ) {
+        const zMin = Math.min(...allTris.map(t => getZMin(t)));
+        globalOffset = -zMin;
+      }
+
+      const objXMLs = allTris.map((tris, i) =>
+        meshXML(tris, i+1, parts[i].name, keepZ ? globalOffset : -getZMin(tris))
+      );
+
+      const buildItems = parts.map((_,i) => `    <item objectid="${i+1}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>`).join('\n');
+      const cfgItems = parts.map((p,i) =>
+        `  <object id="${i+1}">\n    <metadata key="name" value="${p.name}"/>\n    <metadata key="extruder" value="${p.filament}"/>\n  </object>`
+      ).join('\n');
+
+      const model = `<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US"\n  xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"\n  xmlns:BambuStudio="http://schemas.bambulab.com/package/2021">\n  <metadata name="BambuStudio:3mfVersion">1</metadata>\n  <resources>\n${objXMLs.join('\n')}\n  </resources>\n  <build>\n${buildItems}\n  </build>\n</model>`;
+      const config = `<?xml version="1.0" encoding="UTF-8"?>\n<config>\n${cfgItems}\n</config>`;
+      const ct = `<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>\n  <Default Extension="xml" ContentType="application/xml"/>\n</Types>`;
+      const rels = `<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>\n  <Relationship Target="/Metadata/model_settings.config" Id="rel1" Type="http://schemas.bambulab.com/package/2021/model-settings"/>\n</Relationships>`;
+
+      setStatus('ZIP wird erstellt…');
+      const zip = new JSZip();
+      zip.file('[Content_Types].xml', ct);
+      zip.file('_rels/.rels', rels);
+      zip.file('3D/3dmodel.model', model);
+      zip.file('Metadata/model_settings.config', config);
+
+      const fname = (parts.length === 1 ? parts[0].name : 'multicolor') + '.3mf';
+      zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fname;
+        a.click();
+        setStatus('✓ ' + fname + ' heruntergeladen!', 'ok');
+        btn.disabled = false;
+      });
+    } catch(e) {
+      setStatus('Fehler: ' + e.message, 'err');
+      btn.disabled = false;
+    }
+  }, 50);
+}
+</script>
+</body>
+</html>
