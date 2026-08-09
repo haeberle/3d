@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>STL → Multicolor 3MF</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -13,413 +14,780 @@
     --text: #e8eaf0; --muted: #6b7280; --success: #22c55e;
     --error: #ef4444; --radius: 10px; --font: 'Inter', system-ui, sans-serif;
   }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem 4rem; }
-  header { text-align: center; margin-bottom: 2.5rem; }
-  .logo { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.75rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.4rem; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding: 1.5rem 1rem 4rem; }
+  .page-wrap { display: flex; flex-direction: column; align-items: center; }
+
+  /* Top bar */
+  .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1200px; margin-bottom: 1.5rem; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
   .logo svg { -webkit-text-fill-color: initial; }
-  header p { color: var(--muted); font-size: 0.9rem; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 580px; margin-bottom: 1rem; }
-  #drop-zone { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 2.5rem 1rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .top-right { display: flex; align-items: center; gap: 10px; }
+
+  /* Language selector */
+  .lang-selector { position: relative; }
+  .lang-btn { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s; }
+  .lang-btn:hover { border-color: var(--accent); }
+  .lang-btn .flag { font-size: 16px; }
+  .lang-dropdown { display: none; position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; z-index: 300; min-width: 130px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); overflow: hidden; }
+  .lang-dropdown.open { display: block; }
+  .lang-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 0.82rem; transition: background 0.1s; }
+  .lang-option:hover { background: var(--surface2); }
+  .lang-option.active { color: var(--accent); font-weight: 600; }
+  .lang-option .flag { font-size: 16px; }
+
+  /* Main layout */
+  .main-layout { display: flex; gap: 1rem; width: 100%; max-width: 1200px; align-items: flex-start; }
+  .left-col { flex: 0 0 500px; min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+  .right-col { flex: 1; min-width: 320px; }
+
+  @media (max-width: 900px) {
+    .main-layout { flex-direction: column; align-items: center; }
+    .left-col { flex: none; width: 100%; max-width: 560px; }
+    .right-col { width: 100%; max-width: 560px; }
+  }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+
+  /* Drop zone */
+  #drop-zone { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 2rem 1rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
   #drop-zone:hover, #drop-zone.over { border-color: var(--accent); background: rgba(79,127,255,0.05); }
   #drop-zone input { display: none; }
-  .upload-icon { width: 44px; height: 44px; margin: 0 auto 0.75rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .upload-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2; }
-  #drop-zone h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
-  #drop-zone p { font-size: 0.8rem; color: var(--muted); }
+  .upload-icon { width: 40px; height: 40px; margin: 0 auto 0.6rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .upload-icon svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; }
+  #drop-zone h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+  #drop-zone p { font-size: 0.78rem; color: var(--muted); }
 
-  #parts-section { display: none; margin-top: 1.5rem; }
-  .parts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-  .parts-header h2 { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
-  .parts-header span { font-size: 0.78rem; color: var(--muted); }
+  /* 3D Viewer */
+  #viewer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; height: 100%; display: flex; flex-direction: column; min-height: 480px; }
+  .viewer-top { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .viewer-top h3 { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .viewer-hint { font-size: 0.7rem; color: var(--muted); }
+  #viewer-canvas { width: 100%; flex: 1; display: block; cursor: grab; min-height: 360px; }
+  #viewer-canvas:active { cursor: grabbing; }
+  .viewer-bottom { border-top: 1px solid var(--border); flex-shrink: 0; }
+  .viewer-controls { display: flex; gap: 6px; padding: 0.6rem 1rem; flex-wrap: wrap; }
+  .v-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 9px; font-size: 0.72rem; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .v-btn:hover { border-color: var(--accent); color: var(--text); }
+  .v-btn.active { border-color: var(--accent); color: var(--accent); }
+  .sync-bar { display: flex; align-items: center; gap: 8px; padding: 0.5rem 1rem 0.7rem; font-size: 0.75rem; color: var(--muted); }
+  .sync-bar input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+  .sync-bar label { cursor: pointer; user-select: none; }
 
-  /* Scrollable list for many parts */
-  #parts-container { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+  /* Empty viewer message */
+  #viewer-empty { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; color: var(--muted); pointer-events: none; }
+  #viewer-empty svg { width: 40px; height: 40px; stroke: var(--border); fill: none; stroke-width: 1.5; margin: 0 auto 0.5rem; display: block; }
+  #viewer-empty p { font-size: 0.8rem; }
+  .viewer-canvas-wrap { position: relative; flex: 1; min-height: 360px; }
+
+  /* Parts list */
+  #parts-section { display: none; margin-top: 1.25rem; }
+  .parts-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+  .parts-header h2 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .parts-header span { font-size: 0.75rem; color: var(--muted); }
+  #parts-container { max-height: 360px; overflow-y: auto; padding-right: 4px; }
   #parts-container::-webkit-scrollbar { width: 4px; }
-  #parts-container::-webkit-scrollbar-track { background: transparent; }
   #parts-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .part-row { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; transition: border-color 0.15s; }
-  .part-row:hover { border-color: var(--accent); }
-  .part-num { font-size: 0.72rem; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; }
-  .part-swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15); flex-shrink: 0; transition: transform 0.15s; }
-  .part-row:hover .part-swatch { transform: scale(1.15); }
-  .part-name { flex: 1; font-size: 0.82rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .part-row select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; font-size: 0.8rem; cursor: pointer; width: 120px; flex-shrink: 0; }
-  .part-row select:focus { outline: none; border-color: var(--accent); }
-  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 3px; border-radius: 4px; display: flex; align-items: center; transition: color 0.15s; flex-shrink: 0; }
+  .part-row { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 5px; transition: border-color 0.15s, background 0.15s; cursor: default; }
+  .part-row:hover { border-color: var(--border); }
+  .part-row.selected-part { border-color: var(--accent); background: rgba(79,127,255,0.10); }
+  .part-num { font-size: 0.7rem; color: var(--muted); width: 18px; text-align: right; flex-shrink: 0; }
+  .part-swatch { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.15); flex-shrink: 0; }
+  .part-name { flex: 1; font-size: 0.8rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; border-radius: 4px; display: flex; align-items: center; transition: color 0.15s; flex-shrink: 0; }
   .remove-btn:hover { color: var(--error); }
-  .remove-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .remove-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-  /* Bulk assign */
-  .bulk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
-  .bulk-row label { font-size: 0.8rem; color: var(--muted); }
-  .bulk-row select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer; }
-  .bulk-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s; }
+  /* Filament custom dropdown */
+  .fil-select-wrap { position: relative; width: 130px; flex-shrink: 0; }
+  .fil-select-btn { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 3px 7px; font-size: 0.78rem; cursor: pointer; width: 100%; color: var(--text); user-select: none; }
+  .fil-select-btn:hover { border-color: var(--accent); }
+  .fil-select-btn .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2); }
+  .fil-select-btn .arrow { margin-left: auto; color: var(--muted); font-size: 9px; }
+  .fil-dropdown { display: none; position: absolute; top: calc(100% + 3px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; z-index: 100; max-height: 180px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+  .fil-dropdown.open { display: block; }
+  .fil-dropdown::-webkit-scrollbar { width: 3px; }
+  .fil-dropdown::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .fil-option { display: flex; align-items: center; gap: 7px; padding: 6px 9px; cursor: pointer; font-size: 0.78rem; transition: background 0.1s; }
+  .fil-option:hover { background: var(--surface2); }
+  .fil-option.selected { background: rgba(79,127,255,0.12); }
+  .fil-option .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2); }
+
+  /* Bulk row */
+  .bulk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; flex-wrap: wrap; }
+  .bulk-row label { font-size: 0.78rem; color: var(--muted); }
+  .bulk-fil-wrap { position: relative; }
+  .bulk-fil-btn { display: flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 9px; font-size: 0.78rem; cursor: pointer; color: var(--text); min-width: 120px; }
+  .bulk-fil-btn .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2); }
+  .bulk-fil-btn .arrow { margin-left: auto; color: var(--muted); font-size: 9px; }
+  .bulk-dropdown { display: none; position: absolute; top: calc(100% + 3px); left: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; z-index: 200; max-height: 180px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 140px; }
+  .bulk-dropdown.open { display: block; }
+  .bulk-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 9px; font-size: 0.78rem; cursor: pointer; transition: border-color 0.15s; }
   .bulk-btn:hover { border-color: var(--accent); }
 
-  #options-section { display: none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
-  .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; cursor: pointer; }
-  .toggle-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
-  .toggle-row .hint { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  #options-section { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .toggle-row { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; cursor: pointer; }
+  .toggle-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+  .toggle-row .hint { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
 
-  #build-btn { display: none; width: 100%; padding: 13px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: var(--radius); font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 1.5rem; transition: opacity 0.2s, transform 0.1s; align-items: center; justify-content: center; gap: 8px; }
+  #build-btn { display: none; width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: var(--radius); font-size: 0.92rem; font-weight: 600; cursor: pointer; margin-top: 1.25rem; transition: opacity 0.2s, transform 0.1s; align-items: center; justify-content: center; gap: 8px; }
   #build-btn:hover:not(:disabled) { opacity: 0.9; }
   #build-btn:active:not(:disabled) { transform: scale(0.99); }
   #build-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  #build-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; }
+  #build-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2; }
 
-  #status { margin-top: 1rem; font-size: 0.82rem; text-align: center; min-height: 20px; color: var(--muted); transition: color 0.2s; }
+  #status { margin-top: 0.75rem; font-size: 0.8rem; text-align: center; min-height: 18px; color: var(--muted); }
   #status.ok { color: var(--success); }
   #status.err { color: var(--error); }
 
-  .filename-row { display: flex; align-items: center; gap: 8px; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
-  .filename-row input { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 0.85rem; font-family: var(--font); transition: border-color 0.15s; }
+  .filename-row { display: flex; align-items: center; gap: 8px; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .filename-row input { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; font-size: 0.82rem; font-family: var(--font); }
   .filename-row input:focus { outline: none; border-color: var(--accent); }
-  .filename-row .ext { color: var(--muted); font-size: 0.82rem; flex-shrink: 0; }
-  .filename-row .shuffle-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 7px 9px; cursor: pointer; font-size: 14px; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
-  .filename-row .shuffle-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filename-row .ext { color: var(--muted); font-size: 0.8rem; flex-shrink: 0; }
+  .shuffle-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 13px; flex-shrink: 0; }
+  .shuffle-btn:hover { border-color: var(--accent); }
 
-  footer { margin-top: 2rem; font-size: 0.75rem; color: var(--muted); text-align: center; }
-  @media (max-width: 400px) { .part-row select { width: 90px; } }
+  footer { margin-top: 2rem; font-size: 0.72rem; color: var(--muted); text-align: center; line-height: 1.8; }
+  a { color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
+<div class="page-wrap">
 
-<header>
+<!-- Top bar with logo + language selector -->
+<div class="top-bar">
   <div class="logo">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#g)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#g)" stroke-width="2">
       <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4f7fff"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs>
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-      <line x1="12" y1="22.08" x2="12" y2="12"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
     </svg>
     STL → 3MF
   </div>
-  <p>Bis zu 100 STL-Dateien zu einer Multicolor 3MF zusammenfügen</p>
-</header>
-
-<div class="card">
-  <div id="drop-zone">
-    <input type="file" id="file-input" multiple accept=".stl">
-    <div class="upload-icon">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    </div>
-    <h3>STL-Dateien hier ablegen</h3>
-    <p>oder klicken zum Auswählen · bis zu 100 Dateien</p>
-  </div>
-
-  <div id="parts-section">
-    <div class="parts-header">
-      <h2>Filament pro Teil</h2>
-      <span id="parts-count"></span>
-    </div>
-
-    <!-- Bulk assign -->
-    <div class="bulk-row">
-      <label>Alle auf:</label>
-      <select id="bulk-select"></select>
-      <button class="bulk-btn" onclick="bulkAssign()">Zuweisen</button>
-    </div>
-
-    <div id="parts-container"></div>
-
-    <div id="options-section">
-      <label class="toggle-row">
-        <input type="checkbox" id="keep-z" checked>
-        <div>
-          <div>Originale Z-Positionen beibehalten</div>
-          <div class="hint">Teile bleiben räumlich zusammengefügt wie im Design</div>
-        </div>
-      </label>
+  <div class="top-right">
+    <div class="lang-selector">
+      <div class="lang-btn" onclick="toggleLangDropdown(event)">
+        <span id="lang-flag">🇬🇧</span>
+        <span style="color:var(--muted);font-size:9px;">▼</span>
+      </div>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <div class="lang-option active" data-lang="en" onclick="setLang('en',event)"><span class="flag">🇬🇧</span> English</div>
+        <div class="lang-option" data-lang="de" onclick="setLang('de',event)"><span class="flag">🇩🇪</span> Deutsch</div>
+        <div class="lang-option" data-lang="fr" onclick="setLang('fr',event)"><span class="flag">🇫🇷</span> Français</div>
+        <div class="lang-option" data-lang="it" onclick="setLang('it',event)"><span class="flag">🇮🇹</span> Italiano</div>
+        <div class="lang-option" data-lang="es" onclick="setLang('es',event)"><span class="flag">🇪🇸</span> Español</div>
+      </div>
     </div>
   </div>
-
-  <div id="filename-row" class="filename-row" style="display:none;">
-    <input type="text" id="filename-input" placeholder="Dateiname…" spellcheck="false">
-    <span class="ext">.3mf</span>
-    <button class="shuffle-btn" onclick="generateName()" title="Zufälliger Name">🎲</button>
-  </div>
-
-  <button id="build-btn" onclick="build3MF()">
-    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    3MF erstellen & herunterladen
-  </button>
-
-  <div id="status"></div>
 </div>
 
+<div class="main-layout">
+  <!-- LEFT -->
+  <div class="left-col">
+    <div class="card">
+      <div id="drop-zone">
+        <input type="file" id="file-input" multiple accept=".stl">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <h3 data-i18n="drop_title">Drop STL files here</h3>
+        <p data-i18n="drop_sub">or click to select · up to 100 files</p>
+      </div>
 
+      <div id="parts-section">
+        <div class="parts-header">
+          <h2 data-i18n="filament_per_part">Filament per part</h2>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="parts-count"></span>
+            <button onclick="resetParts()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:2px 8px;font-size:0.72rem;cursor:pointer;" title="Clear all parts" data-i18n-title="clear_all">✕</button>
+          </div>
+        </div>
+        <div class="bulk-row">
+          <label data-i18n="set_all">Set all to:</label>
+          <div class="bulk-fil-wrap">
+            <div class="bulk-fil-btn" onclick="toggleBulkDropdown()">
+              <span class="dot" id="bulk-dot"></span>
+              <span id="bulk-label">Filament 1</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="bulk-dropdown" id="bulk-dropdown"></div>
+          </div>
+          <button class="bulk-btn" onclick="bulkAssign()" data-i18n="assign_all">Assign all</button>
+        </div>
+        <div id="parts-container"></div>
+        <div id="options-section">
+          <label class="toggle-row">
+            <input type="checkbox" id="keep-z" checked>
+            <div>
+              <div data-i18n="keep_z">Keep original Z positions</div>
+              <div class="hint" data-i18n="keep_z_hint">Parts stay aligned as designed</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div id="filename-row" class="filename-row" style="display:none;">
+        <input type="text" id="filename-input" spellcheck="false" data-i18n-placeholder="filename_ph">
+        <span class="ext">.3mf</span>
+        <button class="shuffle-btn" onclick="generateName()" title="Random name">🎲</button>
+      </div>
+
+      <button id="build-btn" onclick="build3MF()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span data-i18n="create_btn">Create & Download 3MF</span>
+      </button>
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: always visible viewer -->
+  <div class="right-col">
+    <div id="viewer-card">
+      <div class="viewer-top">
+        <h3 data-i18n="preview">3D Preview</h3>
+        <span class="viewer-hint" data-i18n="viewer_hint">Drag to rotate · Scroll to zoom</span>
+      </div>
+      <div class="viewer-canvas-wrap">
+        <canvas id="viewer-canvas"></canvas>
+        <div id="viewer-empty">
+          <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <p data-i18n="empty_viewer">Load STL files to preview</p>
+        </div>
+      </div>
+      <div class="viewer-bottom">
+        <div class="viewer-controls">
+          <button class="v-btn" onclick="resetCamera()" data-i18n="reset_view">Reset view</button>
+          <button class="v-btn" id="wf-btn" onclick="toggleWireframe()" data-i18n="wireframe">Wireframe</button>
+          <button class="v-btn" id="grid-btn" onclick="toggleGrid()" data-i18n="grid">Grid</button>
+        </div>
+        <div class="sync-bar">
+          <input type="checkbox" id="sync-cb" onchange="onSyncToggle(this.checked)">
+          <label for="sync-cb" data-i18n="sync_label">Click part in viewer to select in list</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © eberle.cc · Released under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT Open Source License</a><br>
+  <span data-i18n="no_warranty">No warranty is provided. Use this tool at your own risk.</span>
+</footer>
+</div>
 
 <script>
-// Generate 100 filament colors using HSL spread
+// ── i18n ─────────────────────────────────────────────────────────
+const LANGS = {
+  en: {
+    flag:'🇬🇧', code:'EN',
+    drop_title:'Drop STL files here', drop_sub:'or click to select · up to 100 files',
+    filament_per_part:'Filament per part', set_all:'Set all to:', assign_all:'Assign all',
+    keep_z:'Keep original Z positions', keep_z_hint:'Parts stay aligned as designed',
+    filename_ph:'Filename…', create_btn:'Create & Download 3MF',
+    preview:'3D Preview', viewer_hint:'Drag to rotate · Scroll to zoom',
+    empty_viewer:'Load STL files to preview',
+    reset_view:'Reset view', wireframe:'Wireframe', grid:'Grid',
+    sync_label:'Click part in viewer to select in list',
+    clear_all:'Clear all',
+    no_warranty:'No warranty is provided. Use this tool at your own risk.',
+    parts_loaded:n=>`${n} file(s) loaded.`, no_stl:'No STL files found.',
+    max_files:n=>`Max 100 files. Current: ${n}`,
+    processing:'Processing…', creating_zip:'Creating ZIP…',
+    downloaded:f=>`✓ ${f} downloaded!`, error:e=>`Error: ${e}`,
+    parts_count:n=>`${n} parts`,
+  },
+  de: {
+    flag:'🇩🇪', code:'DE',
+    drop_title:'STL-Dateien hier ablegen', drop_sub:'oder klicken zum Auswählen · bis zu 100 Dateien',
+    filament_per_part:'Filament pro Teil', set_all:'Alle auf:', assign_all:'Zuweisen',
+    keep_z:'Originale Z-Positionen beibehalten', keep_z_hint:'Teile bleiben räumlich zusammengefügt',
+    filename_ph:'Dateiname…', create_btn:'3MF erstellen & herunterladen',
+    preview:'3D-Vorschau', viewer_hint:'Ziehen zum Drehen · Scrollen zum Zoomen',
+    empty_viewer:'STL-Dateien laden für Vorschau',
+    reset_view:'Ansicht zurücksetzen', wireframe:'Gitternetz', grid:'Raster',
+    sync_label:'Teil im Viewer anklicken → in Liste markieren',
+    clear_all:'Alle löschen',
+    no_warranty:'Keine Gewähr. Verwendung auf eigene Verantwortung.',
+    parts_loaded:n=>`${n} Datei(en) geladen.`, no_stl:'Keine STL-Dateien gefunden.',
+    max_files:n=>`Maximum 100 Dateien. Aktuell: ${n}`,
+    processing:'Verarbeite Dateien…', creating_zip:'ZIP wird erstellt…',
+    downloaded:f=>`✓ ${f} heruntergeladen!`, error:e=>`Fehler: ${e}`,
+    parts_count:n=>`${n} Teile`,
+  },
+  fr: {
+    flag:'🇫🇷', code:'FR',
+    drop_title:'Déposer les fichiers STL ici', drop_sub:'ou cliquer pour sélectionner · jusqu\'à 100 fichiers',
+    filament_per_part:'Filament par pièce', set_all:'Tout mettre à:', assign_all:'Assigner',
+    keep_z:'Conserver les positions Z originales', keep_z_hint:'Les pièces restent alignées comme conçu',
+    filename_ph:'Nom du fichier…', create_btn:'Créer et télécharger 3MF',
+    preview:'Aperçu 3D', viewer_hint:'Glisser pour tourner · Défiler pour zoomer',
+    empty_viewer:'Charger des fichiers STL pour aperçu',
+    reset_view:'Réinitialiser', wireframe:'Filaire', grid:'Grille',
+    sync_label:'Cliquer une pièce dans le viewer pour la sélectionner',
+    clear_all:'Tout effacer',
+    no_warranty:'Aucune garantie. Utilisation à vos risques.',
+    parts_loaded:n=>`${n} fichier(s) chargé(s).`, no_stl:'Aucun fichier STL trouvé.',
+    max_files:n=>`Maximum 100 fichiers. Actuel: ${n}`,
+    processing:'Traitement…', creating_zip:'Création ZIP…',
+    downloaded:f=>`✓ ${f} téléchargé!`, error:e=>`Erreur: ${e}`,
+    parts_count:n=>`${n} pièces`,
+  },
+  it: {
+    flag:'🇮🇹', code:'IT',
+    drop_title:'Trascina i file STL qui', drop_sub:'o clicca per selezionare · fino a 100 file',
+    filament_per_part:'Filamento per parte', set_all:'Imposta tutto a:', assign_all:'Assegna tutto',
+    keep_z:'Mantieni posizioni Z originali', keep_z_hint:'Le parti rimangono allineate come progettato',
+    filename_ph:'Nome file…', create_btn:'Crea e scarica 3MF',
+    preview:'Anteprima 3D', viewer_hint:'Trascina per ruotare · Scorri per zoom',
+    empty_viewer:'Carica file STL per anteprima',
+    reset_view:'Reimposta vista', wireframe:'Griglia', grid:'Piano',
+    sync_label:'Clicca parte nel viewer per selezionare nella lista',
+    clear_all:'Cancella tutto',
+    no_warranty:'Nessuna garanzia. Uso a proprio rischio.',
+    parts_loaded:n=>`${n} file caricati.`, no_stl:'Nessun file STL trovato.',
+    max_files:n=>`Massimo 100 file. Attuali: ${n}`,
+    processing:'Elaborazione…', creating_zip:'Creazione ZIP…',
+    downloaded:f=>`✓ ${f} scaricato!`, error:e=>`Errore: ${e}`,
+    parts_count:n=>`${n} parti`,
+  },
+  es: {
+    flag:'🇪🇸', code:'ES',
+    drop_title:'Arrastra archivos STL aquí', drop_sub:'o haz clic para seleccionar · hasta 100 archivos',
+    filament_per_part:'Filamento por pieza', set_all:'Poner todo a:', assign_all:'Asignar todo',
+    keep_z:'Mantener posiciones Z originales', keep_z_hint:'Las piezas quedan alineadas como se diseñaron',
+    filename_ph:'Nombre de archivo…', create_btn:'Crear y descargar 3MF',
+    preview:'Vista previa 3D', viewer_hint:'Arrastrar para rotar · Desplazar para zoom',
+    empty_viewer:'Carga archivos STL para vista previa',
+    reset_view:'Restablecer vista', wireframe:'Malla', grid:'Cuadrícula',
+    sync_label:'Clic en pieza en el visor para seleccionar en lista',
+    clear_all:'Borrar todo',
+    no_warranty:'Sin garantía. Uso bajo su propio riesgo.',
+    parts_loaded:n=>`${n} archivo(s) cargado(s).`, no_stl:'No se encontraron archivos STL.',
+    max_files:n=>`Máximo 100 archivos. Actual: ${n}`,
+    processing:'Procesando…', creating_zip:'Creando ZIP…',
+    downloaded:f=>`✓ ${f} descargado!`, error:e=>`Error: ${e}`,
+    parts_count:n=>`${n} piezas`,
+  },
+};
+
+let currentLang = localStorage.getItem('stl3mf-lang') || 'en';
+let T = LANGS[currentLang];
+
+function applyLang() {
+  T = LANGS[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (T[key] && typeof T[key] === 'string') el.textContent = T[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (T[key]) el.placeholder = T[key];
+  });
+  document.getElementById('lang-flag').textContent = T.flag;
+  document.querySelectorAll('.lang-option').forEach(o => o.classList.toggle('active', o.dataset.lang === currentLang));
+  // Update dynamic texts
+  if (parts.length) {
+    document.getElementById('parts-count').textContent = T.parts_count(parts.length);
+  }
+}
+
+function setLang(lang, event) {
+  if(event) event.stopPropagation();
+  currentLang = lang;
+  localStorage.setItem('stl3mf-lang', lang);
+  document.getElementById('lang-dropdown').classList.remove('open');
+  applyLang();
+}
+
+function toggleLangDropdown(event) {
+  event.stopPropagation();
+  document.getElementById('lang-dropdown').classList.toggle('open');
+}
+
+// ── Filament colors ──────────────────────────────────────────────
 function generateFilaments(n) {
-  const fixed = [
-    '#e63946','#f1faee','#457b9d','#f4d03f',
-    '#2ecc71','#f39c12','#9b59b6','#2c3e50',
-    '#00bcd4','#ff5722','#795548','#607d8b',
-    '#e91e63','#3f51b5','#009688','#ff9800',
-  ];
+  const fixed = ['#e63946','#f1faee','#457b9d','#f4d03f','#2ecc71','#f39c12','#9b59b6','#2c3e50','#00bcd4','#ff5722','#795548','#607d8b','#e91e63','#3f51b5','#009688','#ff9800'];
   const result = [];
-  for (let i = 0; i < n; i++) {
-    if (i < fixed.length) {
-      result.push({ label: String(i+1), color: fixed[i] });
-    } else {
-      const hue = Math.round((i * 137.508) % 360); // golden angle
-      result.push({ label: String(i+1), color: `hsl(${hue},70%,55%)` });
-    }
+  for (let i=0;i<n;i++) {
+    if (i<fixed.length) result.push({label:String(i+1),color:fixed[i]});
+    else { const h=Math.round((i*137.508)%360); result.push({label:String(i+1),color:`hsl(${h},70%,55%)`}); }
   }
   return result;
 }
+const MAX_PARTS=100;
+const FILAMENTS=generateFilaments(MAX_PARTS);
+let parts=[];
+let bulkFilament=1;
 
-const MAX_PARTS = 100;
-const FILAMENTS = generateFilaments(MAX_PARTS);
-
-let parts = [];
-
-// Populate bulk select
-const bulkSel = document.getElementById('bulk-select');
-FILAMENTS.forEach((f, i) => {
-  const o = document.createElement('option');
-  o.value = i + 1;
-  o.textContent = 'Filament ' + f.label;
-  bulkSel.appendChild(o);
-});
-
-function bulkAssign() {
-  const val = parseInt(bulkSel.value);
-  parts.forEach((p, i) => {
-    p.filament = val;
-    const sw = document.getElementById('sw-' + i);
-    const sel = document.getElementById('sel-' + i);
-    if (sw) sw.style.background = FILAMENTS[val-1].color;
-    if (sel) sel.value = val;
+// ── Custom filament dropdown ─────────────────────────────────────
+function buildBulkDropdown() {
+  const dd=document.getElementById('bulk-dropdown'); dd.innerHTML='';
+  FILAMENTS.slice(0,16).forEach((f,i)=>{
+    const opt=document.createElement('div'); opt.className='fil-option'+(i===0?' selected':'');
+    opt.innerHTML=`<span class="dot" style="background:${f.color}"></span>Filament ${f.label}`;
+    opt.addEventListener('click',()=>{
+      bulkFilament=i+1;
+      document.getElementById('bulk-dot').style.background=f.color;
+      document.getElementById('bulk-label').textContent='Filament '+f.label;
+      dd.querySelectorAll('.fil-option').forEach(o=>o.classList.remove('selected'));
+      opt.classList.add('selected'); dd.classList.remove('open');
+    });
+    dd.appendChild(opt);
   });
+  document.getElementById('bulk-dot').style.background=FILAMENTS[0].color;
 }
 
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
+function toggleBulkDropdown() { document.getElementById('bulk-dropdown').classList.toggle('open'); }
 
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('over'); handleFiles(e.dataTransfer.files); });
-fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+function makeFildropdown(partIdx) {
+  const wrap=document.createElement('div'); wrap.className='fil-select-wrap';
+  const p=parts[partIdx];
+  const f=FILAMENTS[Math.min(p.filament-1,FILAMENTS.length-1)];
+  const btn=document.createElement('div'); btn.className='fil-select-btn'; btn.id='filbtn-'+partIdx;
+  btn.innerHTML=`<span class="dot" id="fildot-${partIdx}" style="background:${f.color}"></span><span id="fillabel-${partIdx}">Fil. ${p.filament}</span><span class="arrow">▼</span>`;
+  const dd=document.createElement('div'); dd.className='fil-dropdown'; dd.id='fildrop-'+partIdx;
+  FILAMENTS.slice(0,16).forEach((ff,j)=>{
+    const opt=document.createElement('div'); opt.className='fil-option'+(j+1===p.filament?' selected':'');
+    opt.innerHTML=`<span class="dot" style="background:${ff.color}"></span>Filament ${ff.label}`;
+    opt.addEventListener('click',()=>{
+      parts[partIdx].filament=j+1;
+      document.getElementById('fildot-'+partIdx).style.background=ff.color;
+      document.getElementById('fillabel-'+partIdx).textContent='Fil. '+ff.label;
+      document.getElementById('sw-'+partIdx).style.background=ff.color;
+      dd.querySelectorAll('.fil-option').forEach(o=>o.classList.remove('selected'));
+      opt.classList.add('selected'); dd.classList.remove('open');
+      updateMeshColor(partIdx);
+    });
+    dd.appendChild(opt);
+  });
+  btn.addEventListener('click',e=>{e.stopPropagation();closeAllDropdowns();dd.classList.toggle('open');});
+  wrap.appendChild(btn); wrap.appendChild(dd);
+  return wrap;
+}
+
+function closeAllDropdowns(e) {
+  if(e && e.target.closest('.lang-selector')) return;
+  document.querySelectorAll('.fil-dropdown,.bulk-dropdown,.lang-dropdown').forEach(d=>d.classList.remove('open'));
+}
+document.addEventListener('click', closeAllDropdowns);
+
+function bulkAssign() {
+  parts.forEach((p,i)=>{
+    p.filament=bulkFilament; const f=FILAMENTS[bulkFilament-1];
+    const sw=document.getElementById('sw-'+i); if(sw) sw.style.background=f.color;
+    const dot=document.getElementById('fildot-'+i); if(dot) dot.style.background=f.color;
+    const lbl=document.getElementById('fillabel-'+i); if(lbl) lbl.textContent='Fil. '+bulkFilament;
+    const dd=document.getElementById('fildrop-'+i);
+    if(dd) dd.querySelectorAll('.fil-option').forEach((o,j)=>o.classList.toggle('selected',j+1===bulkFilament));
+  });
+  rebuildMeshColors();
+}
+
+// ── File handling ────────────────────────────────────────────────
+const dropZone=document.getElementById('drop-zone');
+const fileInput=document.getElementById('file-input');
+dropZone.addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('over'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('over');handleFiles(e.dataTransfer.files);});
+fileInput.addEventListener('change',()=>handleFiles(fileInput.files));
 
 function handleFiles(files) {
-  const stls = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.stl'));
-  if (!stls.length) { setStatus('Keine STL-Dateien erkannt.', 'err'); return; }
-  if (parts.length + stls.length > MAX_PARTS) {
-    setStatus(`Maximum ${MAX_PARTS} Dateien erlaubt. Aktuell: ${parts.length}`, 'err'); return;
-  }
-  setStatus('Dateien werden gelesen…');
-  const promises = stls.map(f => new Promise(res => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      parts.push({ name: f.name.replace(/\.stl$/i, ''), buffer: e.target.result, filament: (parts.length % 4) + 1 });
-      res();
-    };
+  const stls=Array.from(files).filter(f=>f.name.toLowerCase().endsWith('.stl'));
+  if(!stls.length){setStatus(T.no_stl,'err');return;}
+  if(parts.length+stls.length>MAX_PARTS){setStatus(T.max_files(parts.length),'err');return;}
+  setStatus(T.processing);
+  const promises=stls.map(f=>new Promise(res=>{
+    const reader=new FileReader();
+    reader.onload=e=>{parts.push({name:f.name.replace(/\.stl$/i,''),buffer:e.target.result,filament:(parts.length%4)+1});res();};
     reader.readAsArrayBuffer(f);
   }));
-  Promise.all(promises).then(() => { renderParts(); setStatus(parts.length + ' Datei(en) geladen.', 'ok'); });
+  Promise.all(promises).then(()=>{renderParts();updateViewer();setStatus(T.parts_loaded(parts.length),'ok');});
 }
 
 function renderParts() {
-  const c = document.getElementById('parts-container');
-  c.innerHTML = '';
-  document.getElementById('parts-count').textContent = parts.length + ' Teile';
-
-  parts.forEach((p, i) => {
-    const row = document.createElement('div');
-    row.className = 'part-row';
-
-    const num = document.createElement('div');
-    num.className = 'part-num';
-    num.textContent = i + 1;
-
-    const swatch = document.createElement('div');
-    swatch.className = 'part-swatch';
-    swatch.id = 'sw-' + i;
-    swatch.style.background = FILAMENTS[Math.min(p.filament-1, FILAMENTS.length-1)].color;
-
-    const nameEl = document.createElement('div');
-    nameEl.className = 'part-name';
-    nameEl.textContent = p.name;
-    nameEl.title = p.name;
-
-    const sel = document.createElement('select');
-    sel.id = 'sel-' + i;
-    // Only show filaments 1-16 in dropdown for usability; user can type more if needed
-    const showCount = Math.min(MAX_PARTS, 16);
-    FILAMENTS.slice(0, showCount).forEach((f, j) => {
-      const o = document.createElement('option');
-      o.value = j + 1;
-      o.textContent = 'Filament ' + f.label;
-      if (j + 1 === p.filament) o.selected = true;
-      sel.appendChild(o);
+  const c=document.getElementById('parts-container'); c.innerHTML='';
+  document.getElementById('parts-count').textContent=T.parts_count(parts.length);
+  parts.forEach((p,i)=>{
+    const row=document.createElement('div'); row.className='part-row';
+    const num=document.createElement('div'); num.className='part-num'; num.textContent=i+1;
+    const swatch=document.createElement('div'); swatch.className='part-swatch'; swatch.id='sw-'+i;
+    swatch.style.background=FILAMENTS[Math.min(p.filament-1,FILAMENTS.length-1)].color;
+    const nameEl=document.createElement('div'); nameEl.className='part-name'; nameEl.textContent=p.name; nameEl.title=p.name;
+    const filWrap=makeFildropdown(i);
+    const rm=document.createElement('button'); rm.className='remove-btn'; rm.title='Remove';
+    rm.innerHTML='<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+    rm.addEventListener('click',()=>{parts.splice(i,1);renderParts();updateViewer();if(!parts.length)hideParts();});
+    row.addEventListener('click',e=>{
+      if(e.target.closest('.fil-select-wrap')||e.target.closest('.remove-btn'))return;
+      if(!syncEnabled)return;
+      if(selectedPartIdx===i) clearPartSelection(); else selectPart(i);
     });
-    sel.addEventListener('change', () => {
-      parts[i].filament = parseInt(sel.value);
-      document.getElementById('sw-' + i).style.background = FILAMENTS[parts[i].filament - 1].color;
-    });
-
-    const rm = document.createElement('button');
-    rm.className = 'remove-btn';
-    rm.title = 'Entfernen';
-    rm.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
-    rm.addEventListener('click', () => { parts.splice(i, 1); renderParts(); if (!parts.length) hideParts(); });
-
-    row.appendChild(num); row.appendChild(swatch); row.appendChild(nameEl); row.appendChild(sel); row.appendChild(rm);
+    row.appendChild(num);row.appendChild(swatch);row.appendChild(nameEl);row.appendChild(filWrap);row.appendChild(rm);
     c.appendChild(row);
   });
-
-  document.getElementById('parts-section').style.display = 'block';
-  document.getElementById('options-section').style.display = 'block';
-  document.getElementById('filename-row').style.display = 'flex';
-  if (!document.getElementById('filename-input').value) generateName();
-  const btn = document.getElementById('build-btn');
-  btn.style.display = 'flex';
+  document.getElementById('parts-section').style.display='block';
+  document.getElementById('options-section').style.display='block';
+  document.getElementById('filename-row').style.display='flex';
+  if(!document.getElementById('filename-input').value) generateName();
+  document.getElementById('build-btn').style.display='flex';
 }
 
 function hideParts() {
-  document.getElementById('parts-section').style.display = 'none';
-  document.getElementById('filename-row').style.display = 'none';
-  document.getElementById('build-btn').style.display = 'none';
+  document.getElementById('parts-section').style.display='none';
+  document.getElementById('filename-row').style.display='none';
+  document.getElementById('build-btn').style.display='none';
   setStatus('');
 }
+function setStatus(msg,type){const el=document.getElementById('status');el.textContent=msg;el.className=type||'';}
 
-function setStatus(msg, type) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = type || '';
-}
-
+// ── STL parsing ──────────────────────────────────────────────────
 function parseSTL(buffer) {
-  const bytes = new Uint8Array(buffer, 0, 80);
-  const header = String.fromCharCode(...bytes).trimStart();
-  if (header.startsWith('solid')) {
-    try { return parseASCII(new TextDecoder().decode(buffer)); } catch(e) {}
-  }
+  const bytes=new Uint8Array(buffer,0,80);
+  const header=String.fromCharCode(...bytes).trimStart();
+  if(header.startsWith('solid')){try{return parseASCII(new TextDecoder().decode(buffer));}catch(e){}}
   return parseBinary(buffer);
 }
-
 function parseBinary(buf) {
-  const v = new DataView(buf);
-  const n = v.getUint32(80, true);
-  const tris = [];
-  let o = 84;
-  for (let i = 0; i < n; i++) {
-    tris.push([
-      [v.getFloat32(o+12,true), v.getFloat32(o+16,true), v.getFloat32(o+20,true)],
-      [v.getFloat32(o+24,true), v.getFloat32(o+28,true), v.getFloat32(o+32,true)],
-      [v.getFloat32(o+36,true), v.getFloat32(o+40,true), v.getFloat32(o+44,true)],
-    ]);
-    o += 50;
-  }
+  const v=new DataView(buf);const n=v.getUint32(80,true);const tris=[];let o=84;
+  for(let i=0;i<n;i++){tris.push([[v.getFloat32(o+12,true),v.getFloat32(o+16,true),v.getFloat32(o+20,true)],[v.getFloat32(o+24,true),v.getFloat32(o+28,true),v.getFloat32(o+32,true)],[v.getFloat32(o+36,true),v.getFloat32(o+40,true),v.getFloat32(o+44,true)]]);o+=50;}
   return tris;
 }
-
 function parseASCII(text) {
-  const tris = []; const re = /vertex\s+([\d.eE+\-]+)\s+([\d.eE+\-]+)\s+([\d.eE+\-]+)/g;
-  let m, vs = [];
-  while ((m = re.exec(text)) !== null) {
-    vs.push([parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]);
-    if (vs.length === 3) { tris.push([...vs]); vs = []; }
-  }
+  const tris=[];const re=/vertex\s+([\d.eE+\-]+)\s+([\d.eE+\-]+)\s+([\d.eE+\-]+)/g;let m,vs=[];
+  while((m=re.exec(text))!==null){vs.push([parseFloat(m[1]),parseFloat(m[2]),parseFloat(m[3])]);if(vs.length===3){tris.push([...vs]);vs=[];}}
   return tris;
 }
+function getZMin(tris){let z=Infinity;for(const t of tris)for(const v of t)if(v[2]<z)z=v[2];return z;}
 
-function getZMin(tris) {
-  let zMin = Infinity;
-  for (const t of tris) for (const v of t) if (v[2] < zMin) zMin = v[2];
-  return zMin;
+// ── 3D Viewer ────────────────────────────────────────────────────
+let scene,camera,renderer,meshes=[],wireframe=false,gridHelper;
+let isDragging=false,prevMouse={x:0,y:0};
+let spherical={theta:0.6,phi:0.8,radius:200};
+let viewerTarget={x:0,y:0,z:0};
+
+function initViewer() {
+  const canvas=document.getElementById('viewer-canvas');
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0x0f1117,1);
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(45,canvas.clientWidth/Math.max(canvas.clientHeight,1),0.1,100000);
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const d1=new THREE.DirectionalLight(0xffffff,0.8);d1.position.set(1,3,2);scene.add(d1);
+  const d2=new THREE.DirectionalLight(0x8899ff,0.3);d2.position.set(-2,-1,-2);scene.add(d2);
+  gridHelper=new THREE.GridHelper(300,30,0x2e3350,0x2e3350);
+  scene.add(gridHelper);
+  // Mouse
+  canvas.addEventListener('mousedown',e=>{isDragging=true;prevMouse={x:e.clientX,y:e.clientY};});
+  window.addEventListener('mouseup',()=>isDragging=false);
+  window.addEventListener('mousemove',e=>{
+    if(!isDragging)return;
+    const dx=(e.clientX-prevMouse.x)*0.008,dy=(e.clientY-prevMouse.y)*0.008;
+    spherical.theta-=dx;spherical.phi=Math.max(0.05,Math.min(Math.PI*0.48,spherical.phi+dy));
+    prevMouse={x:e.clientX,y:e.clientY};updateCamera();
+  });
+  canvas.addEventListener('wheel',e=>{spherical.radius=Math.max(5,Math.min(5000,spherical.radius+e.deltaY*0.3));updateCamera();e.preventDefault();},{passive:false});
+  // Touch
+  let lt=null,ltd=0;
+  canvas.addEventListener('touchstart',e=>{if(e.touches.length===1)lt={x:e.touches[0].clientX,y:e.touches[0].clientY};if(e.touches.length===2)ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);});
+  canvas.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1&&lt){const dx=(e.touches[0].clientX-lt.x)*0.01,dy=(e.touches[0].clientY-lt.y)*0.01;spherical.theta-=dx;spherical.phi=Math.max(0.05,Math.min(Math.PI*0.48,spherical.phi+dy));lt={x:e.touches[0].clientX,y:e.touches[0].clientY};updateCamera();}
+    if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);spherical.radius=Math.max(5,Math.min(5000,spherical.radius-(d-ltd)*0.5));ltd=d;updateCamera();}
+  },{passive:false});
+  canvas.addEventListener('click',onMeshClick);
+  updateCamera();
+  animate();
+  window.addEventListener('resize',onResize);
+  onResize();
 }
 
-function meshXML(tris, id, name, zOff) {
-  const vm = new Map(); const verts = []; const ti = [];
-  for (const tri of tris) {
-    const idx = [];
-    for (const v of tri) {
-      const x = Math.round(v[0]*1e4)/1e4, y = Math.round(v[1]*1e4)/1e4, z = Math.round((v[2]+zOff)*1e4)/1e4;
-      const k = `${x},${y},${z}`;
-      if (!vm.has(k)) { vm.set(k, verts.length); verts.push([x,y,z]); }
-      idx.push(vm.get(k));
-    }
-    ti.push(idx);
-  }
-  const vx = verts.map(v => `          <vertex x="${v[0]}" y="${v[1]}" z="${v[2]}"/>`).join('\n');
-  const tx = ti.map(t => `          <triangle v1="${t[0]}" v2="${t[1]}" v3="${t[2]}"/>`).join('\n');
+function updateCamera() {
+  camera.position.set(
+    viewerTarget.x+spherical.radius*Math.sin(spherical.phi)*Math.sin(spherical.theta),
+    viewerTarget.y+spherical.radius*Math.cos(spherical.phi),
+    viewerTarget.z+spherical.radius*Math.sin(spherical.phi)*Math.cos(spherical.theta)
+  );
+  camera.lookAt(viewerTarget.x,viewerTarget.y,viewerTarget.z);
+}
+
+function onResize() {
+  const canvas=document.getElementById('viewer-canvas');
+  const wrap=canvas.parentElement;
+  const w=wrap.clientWidth, h=Math.max(wrap.clientHeight,300);
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+function animate(){requestAnimationFrame(animate);if(renderer)renderer.render(scene,camera);}
+
+function color2three(colorStr) {
+  if(colorStr.startsWith('#'))return new THREE.Color(colorStr);
+  const m=colorStr.match(/hsl\((\d+),(\d+)%,(\d+)%\)/);
+  if(m)return new THREE.Color().setHSL(parseInt(m[1])/360,parseInt(m[2])/100,parseInt(m[3])/100);
+  return new THREE.Color(0x888888);
+}
+
+function makeMat(filament, highlight) {
+  const col=color2three(FILAMENTS[Math.min(filament-1,FILAMENTS.length-1)].color);
+  if(wireframe) return new THREE.MeshBasicMaterial({color:col,wireframe:true});
+  if(highlight==='selected') return new THREE.MeshPhongMaterial({color:col,emissive:new THREE.Color(0xffffff),emissiveIntensity:0.2,shininess:80,side:THREE.DoubleSide});
+  if(highlight==='dim') return new THREE.MeshPhongMaterial({color:col,shininess:20,opacity:0.25,transparent:true,side:THREE.DoubleSide});
+  return new THREE.MeshPhongMaterial({color:col,shininess:50,specular:0x333333,side:THREE.DoubleSide});
+}
+
+function updateViewer() {
+  if(!renderer) initViewer();
+  meshes.forEach(m=>scene.remove(m)); meshes=[];
+  document.getElementById('viewer-empty').style.display=parts.length?'none':'block';
+  if(!parts.length)return;
+
+  const keepZ=document.getElementById('keep-z').checked;
+  let globalZOffset=0;
+  if(keepZ){let zMin=Infinity;for(const p of parts){const z=getZMin(parseSTL(p.buffer));if(z<zMin)zMin=z;}globalZOffset=-zMin;}
+
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity,minZ=Infinity,maxZ=-Infinity;
+  const allParsed=parts.map(p=>({tris:parseSTL(p.buffer),filament:p.filament}));
+  allParsed.forEach(({tris})=>{
+    const zOff=keepZ?globalZOffset:-getZMin(tris);
+    for(const tri of tris)for(const v of tri){minX=Math.min(minX,v[0]);maxX=Math.max(maxX,v[0]);minY=Math.min(minY,v[2]+zOff);maxY=Math.max(maxY,v[2]+zOff);minZ=Math.min(minZ,v[1]);maxZ=Math.max(maxZ,v[1]);}
+  });
+  const cx=(minX+maxX)/2,cy=(minY)/2,cz=(minZ+maxZ)/2;
+  const maxSize=Math.max(maxX-minX,maxY-minY,maxZ-minZ,1);
+  viewerTarget={x:cx,y:cy,z:cz};
+  spherical.radius=maxSize*2.5;
+  gridHelper.position.set(cx,0,cz);
+  gridHelper.scale.set(Math.max(maxSize*1.5,100)/300,1,Math.max(maxSize*1.5,100)/300);
+
+  allParsed.forEach(({tris,filament},idx)=>{
+    const zOff=keepZ?globalZOffset:-getZMin(tris);
+    const geo=new THREE.BufferGeometry();
+    const pos=[];
+    for(const tri of tris)for(const v of tri)pos.push(v[0],v[2]+zOff,v[1]);
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    geo.computeVertexNormals();
+    const mesh=new THREE.Mesh(geo,makeMat(filament,null));
+    scene.add(mesh);meshes.push(mesh);
+  });
+  updateCamera();onResize();
+}
+
+function updateMeshColor(idx) {
+  if(!meshes[idx])return;
+  const hl=selectedPartIdx===idx?'selected':selectedPartIdx===-1?null:'dim';
+  meshes[idx].material=makeMat(parts[idx].filament,hl);
+}
+function rebuildMeshColors() { meshes.forEach((_,i)=>updateMeshColor(i)); }
+
+function resetCamera(){spherical={theta:0.6,phi:0.8,radius:spherical.radius};updateCamera();}
+function toggleWireframe(){
+  wireframe=!wireframe;
+  document.getElementById('wf-btn').classList.toggle('active',wireframe);
+  meshes.forEach((_,i)=>updateMeshColor(i));
+}
+function toggleGrid(){
+  gridHelper.visible=!gridHelper.visible;
+  document.getElementById('grid-btn').classList.toggle('active',!gridHelper.visible);
+}
+
+// ── Sync select ──────────────────────────────────────────────────
+let syncEnabled=false;
+let selectedPartIdx=-1;
+
+function onSyncToggle(enabled) {
+  syncEnabled=enabled;
+  localStorage.setItem('stl3mf-sync',enabled?'1':'0');
+  if(!enabled)clearPartSelection();
+}
+function clearPartSelection() {
+  selectedPartIdx=-1;
+  document.querySelectorAll('.part-row').forEach(r=>r.classList.remove('selected-part'));
+  rebuildMeshColors();
+}
+function selectPart(idx) {
+  selectedPartIdx=idx;
+  document.querySelectorAll('.part-row').forEach((r,i)=>r.classList.toggle('selected-part',i===idx));
+  const rows=document.querySelectorAll('.part-row');
+  if(rows[idx])rows[idx].scrollIntoView({block:'nearest',behavior:'smooth'});
+  rebuildMeshColors();
+}
+function onMeshClick(event) {
+  if(!syncEnabled||!renderer)return;
+  const canvas=document.getElementById('viewer-canvas');
+  const rect=canvas.getBoundingClientRect();
+  const mouse=new THREE.Vector2(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);
+  const raycaster=new THREE.Raycaster();
+  raycaster.setFromCamera(mouse,camera);
+  const hits=raycaster.intersectObjects(meshes);
+  if(hits.length>0){const idx=meshes.indexOf(hits[0].object);if(idx!==-1){if(selectedPartIdx===idx)clearPartSelection();else selectPart(idx);}}
+  else clearPartSelection();
+}
+
+// ── Name generator ───────────────────────────────────────────────
+const ADJ=['Cobalt','Titan','Neon','Plasma','Pixel','Carbon','Quartz','Opal','Mango','Emerald','Copper','Sapphire','Coral','Onyx','Azure','Indigo','Garnet','Topaz','Tin','Jade'];
+const NOUN=['Dragon','Compass','Star','Summit','Orbit','Falcon','Prism','Nexus','Echo','Vortex','Apex','Zenith','Pulse','Core','Reef','Atlas','Tower','Blade','Dome','Matrix'];
+function generateName(){const a=ADJ[Math.floor(Math.random()*ADJ.length)],n=NOUN[Math.floor(Math.random()*NOUN.length)],num=Math.floor(Math.random()*90)+10;document.getElementById('filename-input').value=a+n+'-'+num;}
+
+// ── 3MF export ───────────────────────────────────────────────────
+function meshXML(tris,id,name,zOff){
+  const vm=new Map();const verts=[];const ti=[];
+  for(const tri of tris){const idx=[];for(const v of tri){const x=Math.round(v[0]*1e4)/1e4,y=Math.round(v[1]*1e4)/1e4,z=Math.round((v[2]+zOff)*1e4)/1e4;const k=`${x},${y},${z}`;if(!vm.has(k)){vm.set(k,verts.length);verts.push([x,y,z]);}idx.push(vm.get(k));}ti.push(idx);}
+  const vx=verts.map(v=>`          <vertex x="${v[0]}" y="${v[1]}" z="${v[2]}"/>`).join('\n');
+  const tx=ti.map(t=>`          <triangle v1="${t[0]}" v2="${t[1]}" v3="${t[2]}"/>`).join('\n');
   return `    <object id="${id}" type="model" name="${name}">\n      <mesh>\n        <vertices>\n${vx}\n        </vertices>\n        <triangles>\n${tx}\n        </triangles>\n      </mesh>\n    </object>`;
 }
-
-// Word lists for creative 3MF names
-const ADJ = ['Kobalt','Titan','Neon','Plasma','Pixel','Karbon','Quarz','Opal','Mango','Smaragd','Kupfer','Saphir','Koralle','Onyx','Lazur','Indigo','Granat','Topaz','Zinn','Jade'];
-const NOUN = ['Drache','Kompass','Stern','Gipfel','Orbit','Falke','Prisma','Nexus','Echo','Vortex','Apex','Zenit','Puls','Kern','Riff','Atlas','Turm','Klinge','Kuppel','Matrix'];
-
-function generateName() {
-  const adj = ADJ[Math.floor(Math.random() * ADJ.length)];
-  const noun = NOUN[Math.floor(Math.random() * NOUN.length)];
-  const num = Math.floor(Math.random() * 90) + 10;
-  document.getElementById('filename-input').value = adj + noun + '-' + num;
+function resetParts() {
+  parts = [];
+  selectedPartIdx = -1;
+  hideParts();
+  updateViewer();
+  setStatus('');
+  document.getElementById('filename-input').value = '';
 }
 
-function build3MF() {
-  const btn = document.getElementById('build-btn');
-  btn.disabled = true;
-  setStatus('STL-Dateien werden verarbeitet…');
-
-  setTimeout(() => {
-    try {
-      const keepZ = document.getElementById('keep-z').checked;
-      const allTris = parts.map(p => parseSTL(p.buffer));
-
-      let globalOffset = 0;
-      if (keepZ) {
-        let zMin = Infinity;
-        for (const t of allTris) { const z = getZMin(t); if (z < zMin) zMin = z; }
-        globalOffset = -zMin;
-      }
-
-      const objXMLs = allTris.map((tris, i) =>
-        meshXML(tris, i+1, parts[i].name, keepZ ? globalOffset : -getZMin(tris))
-      );
-
-      const buildItems = parts.map((_,i) => `    <item objectid="${i+1}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>`).join('\n');
-      const cfgItems = parts.map((p,i) =>
-        `  <object id="${i+1}">\n    <metadata key="name" value="${p.name}"/>\n    <metadata key="extruder" value="${p.filament}"/>\n  </object>`
-      ).join('\n');
-
-      const model = `<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US"\n  xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"\n  xmlns:BambuStudio="http://schemas.bambulab.com/package/2021">\n  <metadata name="BambuStudio:3mfVersion">1</metadata>\n  <resources>\n${objXMLs.join('\n')}\n  </resources>\n  <build>\n${buildItems}\n  </build>\n</model>`;
-      const config = `<?xml version="1.0" encoding="UTF-8"?>\n<config>\n${cfgItems}\n</config>`;
-      const ct = `<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>\n  <Default Extension="xml" ContentType="application/xml"/>\n</Types>`;
-      const rels = `<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>\n  <Relationship Target="/Metadata/model_settings.config" Id="rel1" Type="http://schemas.bambulab.com/package/2021/model-settings"/>\n</Relationships>`;
-
-      setStatus('ZIP wird erstellt…');
-      const zip = new JSZip();
-      zip.file('[Content_Types].xml', ct);
-      zip.file('_rels/.rels', rels);
-      zip.file('3D/3dmodel.model', model);
-      zip.file('Metadata/model_settings.config', config);
-
-      const inputName = document.getElementById('filename-input').value.trim();
-      const fname = (inputName || (parts.length === 1 ? parts[0].name : 'multicolor')) + '.3mf';
-      zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then(blob => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = fname;
-        a.click();
-        setStatus('✓ ' + fname + ' heruntergeladen!', 'ok');
-        btn.disabled = false;
+function build3MF(){
+  const btn=document.getElementById('build-btn');btn.disabled=true;setStatus(T.processing);
+  setTimeout(()=>{
+    try{
+      const keepZ=document.getElementById('keep-z').checked;
+      const allTris=parts.map(p=>parseSTL(p.buffer));
+      let globalOffset=0;
+      if(keepZ){let zMin=Infinity;for(const t of allTris){const z=getZMin(t);if(z<zMin)zMin=z;}globalOffset=-zMin;}
+      const objXMLs=allTris.map((tris,i)=>meshXML(tris,i+1,parts[i].name,keepZ?globalOffset:-getZMin(tris)));
+      const buildItems=parts.map((_,i)=>`    <item objectid="${i+1}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>`).join('\n');
+      const cfgItems=parts.map((p,i)=>`  <object id="${i+1}">\n    <metadata key="name" value="${p.name}"/>\n    <metadata key="extruder" value="${p.filament}"/>\n  </object>`).join('\n');
+      const model=`<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US"\n  xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"\n  xmlns:BambuStudio="http://schemas.bambulab.com/package/2021">\n  <metadata name="BambuStudio:3mfVersion">1</metadata>\n  <resources>\n${objXMLs.join('\n')}\n  </resources>\n  <build>\n${buildItems}\n  </build>\n</model>`;
+      const config=`<?xml version="1.0" encoding="UTF-8"?>\n<config>\n${cfgItems}\n</config>`;
+      const ct=`<?xml version="1.0" encoding="UTF-8"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>\n  <Default Extension="xml" ContentType="application/xml"/>\n</Types>`;
+      const rels=`<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n  <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>\n  <Relationship Target="/Metadata/model_settings.config" Id="rel1" Type="http://schemas.bambulab.com/package/2021/model-settings"/>\n</Relationships>`;
+      setStatus(T.creating_zip);
+      const zip=new JSZip();
+      zip.file('[Content_Types].xml',ct);zip.file('_rels/.rels',rels);
+      zip.file('3D/3dmodel.model',model);zip.file('Metadata/model_settings.config',config);
+      const inputName=document.getElementById('filename-input').value.trim();
+      const fname=(inputName||(parts.length===1?parts[0].name:'multicolor'))+'.3mf';
+      zip.generateAsync({type:'blob',compression:'DEFLATE'}).then(blob=>{
+        const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+        setStatus(T.downloaded(fname),'ok');btn.disabled=false;
       });
-    } catch(e) {
-      setStatus('Fehler: ' + e.message, 'err');
-      btn.disabled = false;
-    }
-  }, 50);
+    }catch(e){setStatus(T.error(e.message),'err');btn.disabled=false;}
+  },50);
 }
+
+// ── Init ─────────────────────────────────────────────────────────
+buildBulkDropdown();
+applyLang();
+
+// Sync checkbox default ON
+const savedSync=localStorage.getItem('stl3mf-sync');
+syncEnabled = savedSync === null ? true : savedSync === '1';
+document.getElementById('sync-cb').checked=syncEnabled;
+localStorage.setItem('stl3mf-sync', syncEnabled?'1':'0');
+
+// Init viewer (always visible)
+initViewer();
+document.getElementById('viewer-empty').style.display='block';
 </script>
-<footer style="margin-top: 2rem; font-size: 0.75rem; color: var(--muted); text-align: center; line-height: 1.8;">
-  © eberle.cc · Released under the <a href="https://opensource.org/licenses/MIT" target="_blank" style="color: var(--accent); text-decoration: none;">MIT Open Source License</a><br>
-  No warranty is provided. Use this tool at your own risk.
-</footer>
 </body>
 </html>
