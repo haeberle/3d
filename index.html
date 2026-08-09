@@ -247,7 +247,7 @@
         <div class="bulk-row">
           <label data-i18n="set_all">Set all to:</label>
           <div class="bulk-fil-wrap">
-            <div class="bulk-fil-btn" onclick="toggleBulkDropdown()">
+            <div class="bulk-fil-btn" onclick="toggleBulkDropdown(event)">
               <span class="dot" id="bulk-dot"></span>
               <span id="bulk-label">Filament 1</span>
               <span class="arrow">▼</span>
@@ -507,7 +507,7 @@ function buildBulkDropdown() {
   document.getElementById('bulk-dot').style.background=FILAMENTS[0].color;
 }
 
-function toggleBulkDropdown() { document.getElementById('bulk-dropdown').classList.toggle('open'); }
+function toggleBulkDropdown(event) { event.stopPropagation(); document.getElementById('bulk-dropdown').classList.toggle('open'); }
 
 function makeFildropdown(partIdx) {
   const wrap=document.createElement('div'); wrap.className='fil-select-wrap';
@@ -537,6 +537,7 @@ function makeFildropdown(partIdx) {
 
 function closeAllDropdowns(e) {
   if(e && e.target.closest('.lang-selector')) return;
+  if(e && e.target.closest('.bulk-fil-wrap')) return;
   document.querySelectorAll('.fil-dropdown,.bulk-dropdown,.lang-dropdown').forEach(d=>d.classList.remove('open'));
 }
 document.addEventListener('click', closeAllDropdowns);
