@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeaponMaster – Waffen & Items | Minecraft | eberle.cc</title>
+<meta name="description" content="Vollständige deutsche Übersicht aller 77 Waffen, Rüstungen und Items des WeaponMaster Minecraft-Plugins.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a;
+  --border:#2e3350; --accent:#4f7fff; --accent2:#7c3aed;
+  --text:#e8eaf0; --muted:#6b7280; --success:#22c55e;
+  --supreme:#ff4444; --legendary:#f4d03f; --epic:#9b59b6; --other:#2ecc71;
+  --font:'Inter',system-ui,sans-serif; --radius:10px;
+}
+:root.light {
+  --bg:#f0f2f7; --surface:#fff; --surface2:#e8ecf4;
+  --border:#d0d6e8; --text:#1a1d2e; --muted:#6b7280;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+
+/* Nav */
+.navbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0.6rem 1.5rem; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:100; }
+.nav-logo { font-weight:800; font-size:0.95rem; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-sep { color:var(--border); }
+.nav-link { color:var(--muted); font-size:0.82rem; text-decoration:none; }
+.nav-link:hover { color:var(--text); }
+.nav-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.theme-btn { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:13px; cursor:pointer; }
+.back-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:4px 10px; font-size:0.75rem; text-decoration:none; }
+
+/* Layout */
+.container { max-width:1100px; margin:0 auto; padding:2rem 1rem 4rem; display:grid; grid-template-columns:220px 1fr; gap:2rem; }
+@media(max-width:700px){ .container{grid-template-columns:1fr;} .sidebar{display:none;} }
+
+/* Sidebar */
+.sidebar { position:sticky; top:60px; height:calc(100vh - 80px); overflow-y:auto; }
+.sidebar::-webkit-scrollbar{width:3px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.sidebar h3 { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin:1rem 0 0.4rem; }
+.sidebar a { display:block; font-size:0.78rem; color:var(--muted); text-decoration:none; padding:3px 0 3px 8px; border-left:2px solid transparent; transition:color 0.15s, border-color 0.15s; }
+.sidebar a:hover { color:var(--text); border-color:var(--accent); }
+.sidebar .tier-sup { border-color:var(--supreme)!important; color:var(--supreme)!important; }
+.sidebar .tier-leg { border-color:var(--legendary)!important; color:var(--legendary)!important; }
+.sidebar .tier-epic { border-color:var(--epic)!important; color:var(--epic)!important; }
+
+/* Content */
+.content h1 { font-size:1.8rem; font-weight:800; margin-bottom:0.5rem; }
+.content .subtitle { color:var(--muted); font-size:0.9rem; margin-bottom:2rem; }
+
+.tier-badge { display:inline-block; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; padding:2px 10px; border-radius:20px; margin-bottom:1.5rem; }
+.tier-SUPREME { background:rgba(255,68,68,0.15); color:var(--supreme); border:1px solid var(--supreme); }
+.tier-LEGENDARY { background:rgba(244,208,63,0.15); color:var(--legendary); border:1px solid var(--legendary); }
+.tier-EPIC { background:rgba(155,89,182,0.15); color:var(--epic); border:1px solid var(--epic); }
+.tier-OTHER { background:rgba(46,204,113,0.15); color:var(--other); border:1px solid var(--other); }
+.tier-DYE { background:rgba(79,127,255,0.15); color:var(--accent); border:1px solid var(--accent); }
+
+.tier-section { margin-bottom:3rem; }
+.tier-section h2 { font-size:1.2rem; font-weight:800; margin-bottom:0.3rem; display:flex; align-items:center; gap:10px; }
+.tier-section .tier-desc { font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; }
+
+.weapon-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; transition:border-color 0.15s; }
+.weapon-card:hover { border-color:var(--accent); }
+.weapon-card h3 { font-size:1rem; font-weight:700; margin-bottom:0.4rem; }
+.weapon-card .cmd { font-family:monospace; font-size:0.75rem; background:var(--surface2); color:var(--accent); padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:0.6rem; }
+.weapon-card .desc { font-size:0.85rem; color:var(--muted); margin-bottom:0.75rem; line-height:1.5; }
+.weapon-card .note { font-size:0.78rem; color:#f39c12; margin-bottom:0.75rem; background:rgba(243,156,18,0.1); padding:6px 10px; border-radius:6px; border-left:3px solid #f39c12; }
+
+.recipe { background:var(--surface2); border-radius:8px; padding:0.75rem 1rem; }
+.recipe h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:0.5rem; }
+.recipe ul { list-style:none; }
+.recipe ul li { font-size:0.8rem; color:var(--text); padding:2px 0; display:flex; gap:6px; }
+.recipe ul li::before { content:'▸'; color:var(--accent); flex-shrink:0; }
+.recipe .coming-soon { font-size:0.8rem; color:var(--muted); font-style:italic; }
+
+/* Sub-items (Dragon Armor parts) */
+.sub-item { margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border); }
+.sub-item h4 { font-size:0.85rem; font-weight:600; margin-bottom:0.4rem; }
+
+/* Drop table */
+.drop-table { width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:0.5rem; }
+.drop-table th { background:var(--surface2); padding:6px 10px; text-align:left; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); }
+.drop-table td { padding:6px 10px; border-top:1px solid var(--border); }
+.drop-table tr:hover td { background:var(--surface2); }
+
+footer { text-align:center; padding:2rem; font-size:0.75rem; color:var(--muted); border-top:1px solid var(--border); }
+footer a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="nav-logo">eberle.cc</a>
+  <span class="nav-sep">›</span>
+  <a href="/minecraft/index.html" class="nav-link">Minecraft</a>
+  <span class="nav-sep">›</span>
+  <span style="font-size:0.82rem;">WeaponMaster Waffen</span>
+  <div class="nav-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+    <a href="/minecraft/index.html" class="back-btn">← Minecraft</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h3 style="color:var(--supreme)">⚡ Supreme</h3>
+    <a href="#atombomb">Atombombe</a>
+    <a href="#deathrod">Todesstab</a>
+    <a href="#napalm">Napalm-Rakete</a>
+    <a href="#ninjamaster">Ninja-Meisterbogen</a>
+    <a href="#rocketstick">Raketenstab</a>
+    <a href="#rpg">Raketenwerfer</a>
+    <a href="#sniper">Scharfschützengewehr</a>
+
+    <h3 style="color:var(--legendary)">★ Legendary</h3>
+    <a href="#agriabom">Agrar-Abomination</a>
+    <a href="#ares">Ares</a>
+    <a href="#artemis">Artemis-Bogen</a>
+    <a href="#caveman">Höhlenmensch-Schwert</a>
+    <a href="#scythe">Sense des Todes</a>
+    <a href="#dragonarmor">Drachenrüstung</a>
+    <a href="#dragonelytra">Drachen-Elytra</a>
+    <a href="#dragonsword">Drachenschwert</a>
+    <a href="#endarmor">End-Rüstung</a>
+    <a href="#endsword">End-Schwert</a>
+    <a href="#excalibur">Excalibur</a>
+    <a href="#exodus">Exodus</a>
+    <a href="#heavyaxe">Schwere Axt</a>
+    <a href="#helios">Helios</a>
+    <a href="#lifehelmet">Helm des Lebens</a>
+    <a href="#hermes">Hermes-Stiefel</a>
+    <a href="#miner">Segen des Bergmanns</a>
+    <a href="#netherstaff">Netherit-Stab</a>
+    <a href="#ninjabow">Ninja-Bogen</a>
+    <a href="#pilotsword">Piloten-Schwert</a>
+    <a href="#plutonium">Plutoniumklinge</a>
+    <a href="#poseidon">Poseidons Dreizack</a>
+    <a href="#scylla">Scyllas Brustpanzer</a>
+    <a href="#shredded">Geschredderte Axt</a>
+    <a href="#valkyrie">Walküren-Axt</a>
+    <a href="#vampaxe">Vampir-Axt</a>
+    <a href="#warlock">Hexenmeister-Hosen</a>
+    <a href="#witchsword">Hexenschwert</a>
+    <a href="#witherkingstaff">Witherkönig-Stab</a>
+
+    <h3 style="color:var(--epic)">◆ Epic</h3>
+    <a href="#anduril">Anduril</a>
+    <a href="#coppersword">Kupferschwert</a>
+    <a href="#fireball">Feuerball</a>
+    <a href="#scorpionbow">Skorpion-Bogen</a>
+    <a href="#throwingknife">Wurfmesser</a>
+    <a href="#witherstaff">Wither-Stab</a>
+
+    <h3 style="color:var(--other)">◉ Sonstiges</h3>
+    <a href="#others">Items & Materialien</a>
+    <a href="#dyes">Farben</a>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+    <h1>⚔️ WeaponMaster – Waffen & Items</h1>
+    <p class="subtitle">Vollständige deutsche Übersicht aller 77 Waffen, Rüstungen und Items · Minecraft Plugin für Spigot/Paper 1.21+</p>
+
+    <!-- SUPREME -->
+    <div class="tier-section" id="supreme">
+      <h2><span class="tier-badge tier-SUPREME">Supreme</span></h2>
+      <p class="tier-desc">Nur per Admin-Befehl erhältliche Waffen von extremer Zerstörungskraft.</p>
+
+      <div class="weapon-card" id="atombomb">
+        <h3>💣 Atombombe</h3>
+        <div class="cmd">/atombomb give</div>
+        <p class="desc">Vernichtet das Terrain in einem massiven Radius. Äusserste Vorsicht!</p>
+      </div>
+      <div class="weapon-card" id="deathrod">
+        <h3>☠️ Todesstab</h3>
+        <div class="cmd">/deathrod give</div>
+        <p class="desc">Tötet alles was getroffen wird sofort — sogar durch Totem des Untergehens.</p>
+      </div>
+      <div class="weapon-card" id="napalm">
+        <h3>🚀 Napalm-Rakete</h3>
+        <div class="cmd">/napalm give</div>
+        <p class="desc">Feuriges Sprenggerät. Mit grosser Vorsicht einsetzen.</p>
+      </div>
+      <div class="weapon-card" id="ninjamaster">
+        <h3>🏹 Ninja-Meisterbogen</h3>
+        <div class="cmd">/ninjamastersbow give</div>
+        <p class="desc">Schiesst 25 Pfeile gleichzeitig ohne Abklingzeit.</p>
+      </div>
+      <div class="weapon-card" id="rocketstick">
+        <h3>🪄 Raketenstab</h3>
+        <div class="cmd">/rocketstick give</div>
+        <p class="desc">Schleudert dich oder andere Spieler in die Luft.</p>
+      </div>
+      <div class="weapon-card" id="rpg">
+        <h3>💥 Raketenwerfer</h3>
+        <div class="cmd">/rpgl give</div>
+        <p class="desc">Feuert explosive Geschosse mit hoher Geschwindigkeit ab.</p>
+      </div>
+      <div class="weapon-card" id="sniper">
+        <h3>🎯 Scharfschützengewehr</h3>
+        <div class="cmd">/sniperrifle give</div>
+        <p class="desc">Schiesst schnelle und präzise Kugeln.</p>
+      </div>
+    </div>
+
+    <!-- LEGENDARY -->
+    <div class="tier-section" id="legendary">
+      <h2><span class="tier-badge tier-LEGENDARY">Legendary</span></h2>
+      <p class="tier-desc">Herstellbare Waffen für Late- und Endgame-Spieler. Sehr mächtig.</p>
+
+      <div class="weapon-card" id="agriabom">
+        <h3>🌾 Agrar-Abomination</h3>
+        <div class="cmd">/agriculturalabomination give</div>
+        <p class="desc">Pflanzt geerntete Feldfrüchte automatisch neu.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><p class="coming-soon">Rezept wird noch bekannt gegeben</p></div>
+      </div>
+
+      <div class="weapon-card" id="ares">
+        <h3>⚡ Ares</h3>
+        <div class="cmd">/ares give</div>
+        <p class="desc">Erzeugt Blitzeinschläge für 1 Herz echten Schaden.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><p class="coming-soon">Rezept wird noch bekannt gegeben</p></div>
+      </div>
+
+      <div class="weapon-card" id="artemis">
+        <h3>🏹 Artemis-Bogen</h3>
+        <div class="cmd">/artemis give</div>
+        <p class="desc">Hitzesuchende Pfeile greifen nahe Ziele automatisch an.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>1× Wither-Skelett-Schädel</li><li>1× Diamantblock</li><li>1× Enderauge</li>
+          <li>1× Netheritrblock</li><li>2× Netheribarren</li><li>3× Seidene Schnur</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="caveman">
+        <h3>🪨 Höhlenmensch-Schwert</h3>
+        <div class="cmd">/cavemansword give</div>
+        <p class="desc">Wird durch Benutzung stärker — steigert Schaden mit jeder Erfahrungsstufe.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>3× Netheritritschwert (neu, volle Haltbarkeit, verzauberungsfrei)</li>
+          <li>2× Tiefschieferstein</li><li>1× Netheribarren</li><li>1× Lohenrute</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="scythe">
+        <h3>💀 Sense des Todes</h3>
+        <div class="cmd">/scythe give</div>
+        <p class="desc">Verursacht echten Schaden (30% der Gesundheit des Ziels sofort) und verleiht zunehmende Stärkestufen basierend auf dem Schaden.</p>
+        <div class="note">⚠️ Nur 10 Treffer bis die Haltbarkeit aufgebraucht ist. Flicken (Mending) nicht möglich.</div>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× Lohenrute</li><li>2× Redstoneblock</li><li>2× Netheribarren</li>
+          <li>1× Uhr</li><li>1× Wither-Skelett-Schädel</li><li>1× Netherstern</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="dragonarmor">
+        <h3>🐉 Drachenrüstung</h3>
+        <div class="cmd">/dragonarmor give</div>
+        <p class="desc">Überaus mächtiges Rüstungsset. Pro Rüstungsteil: 5% Schadensreduktion (max. 20%) und 3,5% mehr Schadensausgabe (max. 14%).</p>
+        <p class="desc" style="margin-top:0.4rem;"><strong>Set-Bonus:</strong> +25% Schaden mit Drachenschwert, Hunger 33% langsamer, zusätzlich 0,75% Schadensreduktion pro Schutzlevel.</p>
+        <div class="sub-item"><h4>🪖 Helm</h4><div class="recipe"><ul><li>5× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
+        <div class="sub-item"><h4>🛡️ Brustpanzer</h4><div class="recipe"><ul><li>8× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
+        <div class="sub-item"><h4>👖 Leggings</h4><div class="recipe"><ul><li>7× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
+        <div class="sub-item"><h4>👢 Stiefel</h4><div class="recipe"><ul><li>4× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
+      </div>
+
+      <div class="weapon-card" id="dragonelytra">
+        <h3>🦋 Drachen-Elytra</h3>
+        <div class="cmd">/dragonelytra give</div>
+        <p class="desc">Mächtige Elytra mit kleinem Geschwindigkeitsboost im Flug. Enderauge verwenden für massiven Geschwindigkeitsschub.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>4× Drachenflügel</li><li>1× Elytra</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="dragonsword">
+        <h3>⚔️ Drachenschwert</h3>
+        <div class="cmd">/dragonsword give</div>
+        <p class="desc">Verursacht erhöhten Schaden. Wird durch Drachenrüstungs-Set weiter verstärkt.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>6× Lohenrute</li><li>2× Drachenkopf</li><li>1× Netheritritschwert</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="endarmor">
+        <h3>🌌 End-Rüstung</h3>
+        <div class="cmd">/endarmor give</div>
+        <p class="desc">Verstärkt die Kraft des End-Schwertes.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>6× Enderperle</li><li>2× End-Artefakt</li><li>1× beliebige Netheritrüstung</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="endsword">
+        <h3>🌌 End-Schwert</h3>
+        <div class="cmd">/endsword give</div>
+        <p class="desc">Rechtsklick zum Vorwärt-Teleportieren.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>4× Enderperle</li><li>4× End-Artefakt</li><li>1× Eisenschwert</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="excalibur">
+        <h3>✨ Excalibur</h3>
+        <div class="cmd">/excalibur give</div>
+        <p class="desc">Explodiert beim Aufprall und verursacht echten Schaden.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× TNT</li><li>2× Netherstern</li><li>2× Diamantblock</li>
+          <li>1× Endkristall</li><li>1× Zombiekopf</li><li>1× Skelettschädel</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="exodus">
+        <h3>💚 Exodus</h3>
+        <div class="cmd">/exodus give</div>
+        <p class="desc">Heilt bei jedem Treffer.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>5× Diamantblock</li><li>2× Goldene Karotte</li>
+          <li>1× Verzauberter Goldener Apfel</li><li>1× Endkristall</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="heavyaxe">
+        <h3>🪓 Schwere Axt</h3>
+        <div class="cmd">/heavyaxe give</div>
+        <p class="desc">Fällt einen ganzen Baum mit einem einzigen Schlag.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>2× Stock</li><li>3× Schwerer Kern</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="helios">
+        <h3>☀️ Helios</h3>
+        <div class="cmd">/helios give</div>
+        <p class="desc">Wird mit steigenden Erfahrungsstufen stärker. Rechtsklick für Flächenschaden.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>6× Wiedergeburtanker</li><li>1× Netherstern</li>
+          <li>1× Netheritrblock</li><li>1× Eisenschwert</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="lifehelmet">
+        <h3>💛 Helm des Lebens</h3>
+        <div class="cmd">/lifehelmet give</div>
+        <p class="desc">Rettet dich automatisch wenn du stirbst. 10 Minuten Abklingzeit.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>4× Diamantblock</li><li>1× Netheritrblock</li><li>1× Totem des Untergehens</li>
+          <li>1× Anhaltender Regenerationstrank (Reg. I 0:22)</li>
+          <li>1× Verstärkter Heiltrank (Sofortige Heilung II)</li>
+          <li>1× Lebenskern</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="hermes">
+        <h3>💨 Hermes-Stiefel</h3>
+        <div class="cmd">/hermesboots give</div>
+        <p class="desc">Erhöhte Laufgeschwindigkeit, Rüstungshärte und kleine Chance Angriffe auszuweichen.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× Feder</li><li>2× Netheribarren</li><li>2× Lohenrute</li>
+          <li>1× Leuchtfeuer</li><li>1× Netheritstiefel</li><li>1× TNT</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="miner">
+        <h3>⛏️ Segen des Bergmanns</h3>
+        <div class="cmd">/minersblessing give</div>
+        <p class="desc">Super-Spitzhacke. Durch Abbauen stufenweise verbessern.</p>
+        <div class="note">⚠️ Nur Flicken (Mending) erlaubt. Andere Verzauberungen werden automatisch entfernt. Das Levelsystem nicht austricksen.</div>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× Netheribarren</li><li>2× Hochofen</li><li>2× Herzensdes Meeres</li>
+          <li>1× Netheritrspitzhacke</li><li>1× Lohenrute</li><li>1× Diamantblock</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="netherstaff">
+        <h3>🔮 Netherit-Stab</h3>
+        <div class="cmd">/netheritestaff give</div>
+        <p class="desc">Verleiht getroffenen Gegnern zufällige Effekte. Rechtsklick schiesst Pfeil mit Zufallseffekten.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× Netherstern</li><li>1× Netheribarren</li>
+          <li>1× Netheritrblock</li><li>1× Nether-Reaktorkern</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="ninjabow">
+        <h3>🥷 Ninja-Bogen</h3>
+        <div class="cmd">/ninjabow give</div>
+        <p class="desc">Linksklick feuert sofort drei Pfeile gleichzeitig ab.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>3× Bogen</li><li>2× Amethystsplitter</li>
+          <li>1× Lohenrute</li><li>3× Seidene Schnur</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="pilotsword">
+        <h3>✈️ Piloten-Schwert</h3>
+        <div class="cmd">/pilotsword give</div>
+        <p class="desc">Kombo-Schwert ohne Angriffs-Abklingzeit (dafür weniger Schaden).</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>5× Netherstern</li><li>1× Netheritritschwert (neu, volle Haltbarkeit, unverzaubert)</li>
+          <li>2× Effizienz-V-Buch</li><li>1× Elytra</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="plutonium">
+        <h3>☢️ Plutoniumklinge</h3>
+        <div class="cmd">/plutoniumblade give</div>
+        <p class="desc">Kritische Treffer verursachen erhöhten Schaden. Implosions-Fähigkeit für massiven Schaden an nahen Zielen.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>1× Netheritritschwert</li><li>2× Netherstern</li><li>6× Waffengradiges Plutonium</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="poseidon">
+        <h3>🔱 Poseidons Dreizack</h3>
+        <div class="cmd">/poseidontrident give</div>
+        <p class="desc">Äusserst mächtiger Dreizack.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>3× Dreizack</li><li>2× Herzensdes Meeres</li><li>2× Lohenrute</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="scylla">
+        <h3>🛡️ Scyllas Brustpanzer</h3>
+        <div class="cmd">/scylla give</div>
+        <p class="desc">Schadensresistenz bei niedriger Gesundheit.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>1× Diamantbrustpanzer</li><li>4× Schwamm</li><li>2× Netheribarren</li>
+          <li>2× Trank des Schildkrötenmeisters (verstärkt: Langsamkeit VI und Resistenz IV)</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="shredded">
+        <h3>🧟 Geschredderte Axt</h3>
+        <div class="cmd">/shreddedaxe give</div>
+        <p class="desc">Beschwört beim Treffen eines Feindes einen Zombie.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>1× Diamantblock</li><li>2× Knochen</li><li>3× Zombiekopf</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="valkyrie">
+        <h3>⚔️ Walküren-Axt</h3>
+        <div class="cmd">/valkyrie give</div>
+        <p class="desc">Schwere Axt mit hohem Schaden und langsamer Schwinggeschwindigkeit — kann massiven Rückstoss verursachen.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>4× Eisenblock</li><li>1× Netheribarren</li><li>2× Stock</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="vampaxe">
+        <h3>🧛 Vampir-Axt</h3>
+        <div class="cmd">/vampaxe give</div>
+        <p class="desc">Stiehlt Lebensenergie bei jedem Treffer (Life Steal).</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>3× Netheritrstaxt</li><li>2× Redstoneblock</li><li>1× Wither-Skelett-Schädel</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="warlock">
+        <h3>🔥 Hexenmeister-Hosen</h3>
+        <div class="cmd">/warlockpants give</div>
+        <p class="desc">Permanente Stärke beim Tragen.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× Netheribarren</li><li>1× Wither-Skelett-Schädel</li><li>2× Lohenrute</li>
+          <li>1× Netheritrleggings</li><li>1× Magmacreme</li>
+          <li>1× Diamantschwert (neu, volle Haltbarkeit, unverzaubert)</li><li>1× Endkristall</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="witchsword">
+        <h3>🧙 Hexenschwert</h3>
+        <div class="cmd">/witchsword give</div>
+        <p class="desc">Getroffene Ziele werden verflucht und heilen ihre Angreifer.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><p class="coming-soon">Rezept wird noch bekannt gegeben</p></div>
+      </div>
+
+      <div class="weapon-card" id="witherkingstaff">
+        <h3>💀 Witherkönig-Stab</h3>
+        <div class="cmd">/witherkingstaff give</div>
+        <p class="desc">Verbesserte Version des Wither-Stabs. Schädel fliegen schneller, zusätzliche "Wither Shield"-Heilungsfähigkeit.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>1× Lohenrute</li><li>1× Wither-Stab</li><li>3× Wither-Kopf</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <!-- EPIC -->
+    <div class="tier-section" id="epic">
+      <h2><span class="tier-badge tier-EPIC">Epic</span></h2>
+      <p class="tier-desc">Waffen für Early- bis Midgame-Spieler.</p>
+
+      <div class="weapon-card" id="anduril">
+        <h3>⚡ Anduril</h3>
+        <div class="cmd">/anduril give</div>
+        <p class="desc">Permanente Geschwindigkeit und Stärke beim Halten.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>6× Feder</li><li>1× Amboss</li><li>1× Eisenblock</li><li>1× Eisenschwert</li>
+        </ul></div>
+      </div>
+
+      <div class="weapon-card" id="coppersword">
+        <h3>🗡️ Kupferschwert</h3>
+        <div class="cmd">/coppersword give</div>
+        <p class="desc">Chance Feinde bis zu 4 Sekunden zu betäuben. Wird mit der Zeit schwächer durch Oxidation. Bienenwachs im Amboss verwenden zum Konservieren.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>8× Kupferblock</li><li>1× Eisenschwert</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="fireball">
+        <h3>🔥 Feuerball</h3>
+        <div class="cmd">/fireball give</div>
+        <p class="desc">Boom.</p>
+        <div class="recipe"><h4>Herstellungsrezept (formlos)</h4><ul><li>1× TNT</li><li>1× Feuerkugel</li><li>1× Pfeil</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="scorpionbow">
+        <h3>🦂 Skorpion-Bogen</h3>
+        <div class="cmd">/scorpionbow give</div>
+        <p class="desc">Schiesst Pfeile die Ziele vergiften.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><p class="coming-soon">Rezept wird noch bekannt gegeben</p></div>
+      </div>
+
+      <div class="weapon-card" id="throwingknife">
+        <h3>🗡️ Wurfmesser</h3>
+        <div class="cmd">/throwingknife give</div>
+        <p class="desc">Werfbares Messer das 2 Herzen Schaden verursacht.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>1× Eisenblock</li><li>1× Eisenschwert</li><li>1× Kolben</li></ul></div>
+      </div>
+
+      <div class="weapon-card" id="witherstaff">
+        <h3>💀 Wither-Stab</h3>
+        <div class="cmd">/witherstaff give</div>
+        <p class="desc">Schiesst Wither-Skelett-Schädel.</p>
+        <div class="recipe"><h4>Herstellungsrezept</h4><ul>
+          <li>2× Lohenrute</li><li>1× Wither-Skelett-Schädel</li>
+          <li>1× Feuerkugel</li><li>1× TNT</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <!-- OTHERS -->
+    <div class="tier-section" id="others">
+      <h2><span class="tier-badge tier-OTHER">Sonstiges</span></h2>
+      <p class="tier-desc">Materialien, Spezialitems und Verbrauchsgüter. Befehl: <code style="font-size:0.75rem;background:var(--surface2);padding:2px 6px;border-radius:4px;">/minoritem list</code></p>
+
+      <table class="drop-table">
+        <thead><tr><th>Item</th><th>Beschreibung</th><th>Drop / Herstellung</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Rohes Plutonium</strong></td><td>Radioaktives Material aus Tiefschieferkohle-Erz</td><td>9% Drop von Tiefschieferkohle-Erz</td></tr>
+          <tr><td><strong>Diamant-Apex</strong></td><td>Bester Diamant aller Zeiten. Für Farbrezepte</td><td>3,5% Drop von Diamanterz</td></tr>
+          <tr><td><strong>Smaragd-Apex</strong></td><td>Bester Smaragd aller Zeiten. Für Farbrezepte</td><td>12% Drop von Smaragderz</td></tr>
+          <tr><td><strong>Experten-Siegel</strong></td><td>Erhöht alle Verzauberungen eines Items um 1 Stufe. Einmalig verwendbar</td><td>2,5% Drop vom Wither / Wither-Herausforderung</td></tr>
+          <tr><td><strong>Meister-Siegel</strong></td><td>Wie Experten-Siegel, aber nach bereits versiegeltem Item verwendbar (gesamt +2 Stufen)</td><td>Spezial-Drop</td></tr>
+          <tr><td><strong>Ikhor-Flasche</strong></td><td>Trank des sofortigen Schadens IV</td><td>Herstellbar (Gärendes Spinnenauge + Glasflasche + Lohenrute + Eisenblock + Wither-Skelett-Schädel)</td></tr>
+          <tr><td><strong>Herz des Leviathan</strong></td><td>Blaues Eis. Für Leviathan-Haut benötigt</td><td>12% Drop vom Alten Wächter</td></tr>
+          <tr><td><strong>Haut des Leviathan</strong></td><td>Netheritrleggings mit Prot IV, Explosionsprot IV, Feuerprot IV, Projektilprot IV</td><td>4× Diamantblock, 2× Netheritrblock, 1× Netheritrleggings, 1× Herz des Leviathan</td></tr>
+          <tr><td><strong>Lebenskern</strong></td><td>Für Helm des Lebens benötigt</td><td>0,8% Drop vom Beschwörer</td></tr>
+          <tr><td><strong>Magischer Energieriegel</strong></td><td>+1 Herz beim Verbrauch (max. 6). Bei Tod: -2 Herzen</td><td>Verbrauchsitem</td></tr>
+          <tr><td><strong>Nether-Reaktorkern</strong></td><td>Für Netherit-Stab benötigt</td><td>2% Drop vom Piglin-Brutus</td></tr>
+          <tr><td><strong>Redstone-Apex</strong></td><td>Bestes Redstone aller Zeiten. Für Farbrezepte</td><td>0,75% Drop von Redstone-Erz</td></tr>
+          <tr><td><strong>Seidene Schnur</strong></td><td>Für Artemis-Bogen und Ninja-Bogen</td><td>0,1% Drop von Höhlenspinne</td></tr>
+          <tr><td><strong>Super-EP-Flasche</strong></td><td>Gewährt über 25 Erfahrungsstufen</td><td>Kein Rezept</td></tr>
+          <tr><td><strong>Waffengradiges Plutonium</strong></td><td>Für Plutoniumklinge</td><td>8× Kolben + 1× Rohes Plutonium</td></tr>
+          <tr><td><strong>Wither-Kopf</strong></td><td>Zum Upgraden des Wither-Stabs auf Witherkönig-Stab</td><td>Wither ohne Rüstung töten</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- DYES -->
+    <div class="tier-section" id="dyes">
+      <h2><span class="tier-badge tier-DYE">Farben</span></h2>
+      <p class="tier-desc">Farben ändern die Namensfarbe von Items. Wither-Farbe durch Wither ohne Rüstung töten erhalten.</p>
+
+      <h3 style="font-size:0.9rem;margin:1rem 0 0.5rem;">Grundfarben</h3>
+      <table class="drop-table">
+        <thead><tr><th>Farbe</th><th>Farbton</th><th>Rezept</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Wither-Farbe</strong></td><td>Dunkelgrau</td><td>Drop vom Wither</td></tr>
+          <tr><td><strong>Diamant-Farbe</strong></td><td>Türkis</td><td>Wither-Farbe + Diamant-Apex + 7× Diamantblock</td></tr>
+          <tr><td><strong>Smaragd-Farbe</strong></td><td>Grün</td><td>Wither-Farbe + Smaragd-Apex + 7× Smaragdblock</td></tr>
+          <tr><td><strong>Kristall-Farbe</strong></td><td>Pink</td><td>Wither-Farbe + 8× Amethystcluster</td></tr>
+          <tr><td><strong>Lapislazuli-Farbe</strong></td><td>Blau</td><td>Wither-Farbe + 8× Lapislazuliblock</td></tr>
+          <tr><td><strong>Dunkler-Diamant-Farbe</strong></td><td>Dunkeltürkis</td><td>Diamant-Farbe + 6× Diamant-Apex</td></tr>
+          <tr><td><strong>Gold-Farbe</strong></td><td>Gold</td><td>Wither-Farbe + 4× Verzauberter Goldener Apfel</td></tr>
+          <tr><td><strong>Redstone-Farbe</strong></td><td>Rot</td><td>Wither-Farbe + Redstone-Apex + 7× Redstoneblock</td></tr>
+          <tr><td><strong>Blut-Farbe</strong></td><td>Dunkelrot</td><td>Redstone-Farbe + 4× Redstone-Apex + 4× Zombiekopf</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size:0.9rem;margin:1.5rem 0 0.5rem;">Spezialfarben</h3>
+      <table class="drop-table">
+        <thead><tr><th>Farbe</th><th>Farbton</th><th>Rezept</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Leviathan-Farbe</strong></td><td>Blau & Dunkeltürkis</td><td>Wither-Farbe + Herz des Leviathan + 7× Nasser Schwamm</td></tr>
+          <tr><td><strong>Experten-Farbe</strong></td><td>Orange & Gelb</td><td>Wither-Farbe + 4× Experten-Siegel</td></tr>
+          <tr><td><strong>Drachen-Farbe</strong></td><td>Lila & Pink</td><td>Wither-Farbe + 3× Drachenflügel + 3× Drachenkopf</td></tr>
+          <tr><td><strong>Meister-Farbe</strong></td><td>Beliebige Farbe!</td><td>Nur Admin: /minoritem masterDye</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<footer>
+  © Sesemi GmbH · <a href="/impressum.html">Impressum & Datenschutz</a> · 
+  Inhalte basieren auf <a href="https://github.com/greatericontop/weaponmaster" target="_blank">WeaponMaster</a> von greatericontop (MIT Lizenz)
+</footer>
+
+<script>
+function toggleTheme(){
+  const isL=document.documentElement.classList.toggle('light');
+  localStorage.setItem('stl3mf-theme',isL?'light':'dark');
+  document.getElementById('theme-btn').textContent=isL?'☀️':'🌙';
+}
+const saved=localStorage.getItem('stl3mf-theme');
+const useL=saved?saved==='light':window.matchMedia('(prefers-color-scheme: light)').matches;
+if(useL){document.documentElement.classList.add('light');document.getElementById('theme-btn').textContent='☀️';}
+</script>
+</body>
+</html>
