@@ -73,6 +73,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); min-hei
 .recipe ul li { font-size:0.8rem; color:var(--text); padding:2px 0; display:flex; gap:6px; }
 .recipe ul li::before { content:'▸'; color:var(--accent); flex-shrink:0; }
 .recipe .coming-soon { font-size:0.8rem; color:var(--muted); font-style:italic; }
+.weapon-img { margin-top:0.75rem; }
+.weapon-img img { max-width:100%; border-radius:6px; border:1px solid var(--border); image-rendering:pixelated; }
 
 /* Sub-items (Dragon Armor parts) */
 .sub-item { margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border); }
@@ -232,6 +234,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>1× Wither-Skelett-Schädel</li><li>1× Diamantblock</li><li>1× Enderauge</li>
           <li>1× Netheritrblock</li><li>2× Netheribarren</li><li>3× Seidene Schnur</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/artemisNew.png" alt="artemis" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="caveman">
@@ -242,6 +245,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>3× Netheritritschwert (neu, volle Haltbarkeit, verzauberungsfrei)</li>
           <li>2× Tiefschieferstein</li><li>1× Netheribarren</li><li>1× Lohenrute</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/caveman.png" alt="caveman" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="scythe">
@@ -253,6 +257,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>2× Lohenrute</li><li>2× Redstoneblock</li><li>2× Netheribarren</li>
           <li>1× Uhr</li><li>1× Wither-Skelett-Schädel</li><li>1× Netherstern</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/scythe.png" alt="scythe" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="dragonarmor">
@@ -260,10 +265,14 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/dragonarmor give</div>
         <p class="desc">Überaus mächtiges Rüstungsset. Pro Rüstungsteil: 5% Schadensreduktion (max. 20%) und 3,5% mehr Schadensausgabe (max. 14%).</p>
         <p class="desc" style="margin-top:0.4rem;"><strong>Set-Bonus:</strong> +25% Schaden mit Drachenschwert, Hunger 33% langsamer, zusätzlich 0,75% Schadensreduktion pro Schutzlevel.</p>
-        <div class="sub-item"><h4>🪖 Helm</h4><div class="recipe"><ul><li>5× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
-        <div class="sub-item"><h4>🛡️ Brustpanzer</h4><div class="recipe"><ul><li>8× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
-        <div class="sub-item"><h4>👖 Leggings</h4><div class="recipe"><ul><li>7× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
-        <div class="sub-item"><h4>👢 Stiefel</h4><div class="recipe"><ul><li>4× Drachenflügel</li><li>1× Drachenhorn</li></ul></div></div>
+        <div class="sub-item"><h4>🪖 Helm</h4><div class="recipe"><ul><li>5× Drachenflügel</li><li>1× Drachenhorn</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/dragonhelmet.png" alt="dragonhelmet" loading="lazy"></div></div>
+        <div class="sub-item"><h4>🛡️ Brustpanzer</h4><div class="recipe"><ul><li>8× Drachenflügel</li><li>1× Drachenhorn</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/dragonchestplate.png" alt="dragonchestplate" loading="lazy"></div></div>
+        <div class="sub-item"><h4>👖 Leggings</h4><div class="recipe"><ul><li>7× Drachenflügel</li><li>1× Drachenhorn</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/dragonpants.png" alt="dragonpants" loading="lazy"></div></div>
+        <div class="sub-item"><h4>👢 Stiefel</h4><div class="recipe"><ul><li>4× Drachenflügel</li><li>1× Drachenhorn</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/dragonboots.png" alt="dragonboots" loading="lazy"></div></div>
       </div>
 
       <div class="weapon-card" id="dragonelytra">
@@ -271,6 +280,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/dragonelytra give</div>
         <p class="desc">Mächtige Elytra mit kleinem Geschwindigkeitsboost im Flug. Enderauge verwenden für massiven Geschwindigkeitsschub.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>4× Drachenflügel</li><li>1× Elytra</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/dragonelytra.png" alt="dragonelytra" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="dragonsword">
@@ -278,6 +288,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/dragonsword give</div>
         <p class="desc">Verursacht erhöhten Schaden. Wird durch Drachenrüstungs-Set weiter verstärkt.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>6× Lohenrute</li><li>2× Drachenkopf</li><li>1× Netheritritschwert</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/dragsword.png" alt="dragonsword" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="endarmor">
@@ -285,6 +296,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/endarmor give</div>
         <p class="desc">Verstärkt die Kraft des End-Schwertes.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>6× Enderperle</li><li>2× End-Artefakt</li><li>1× beliebige Netheritrüstung</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/endarmor.png" alt="endarmor" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="endsword">
@@ -292,6 +304,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/endsword give</div>
         <p class="desc">Rechtsklick zum Vorwärt-Teleportieren.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>4× Enderperle</li><li>4× End-Artefakt</li><li>1× Eisenschwert</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/endsword.png" alt="endsword" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="excalibur">
@@ -302,6 +315,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>2× TNT</li><li>2× Netherstern</li><li>2× Diamantblock</li>
           <li>1× Endkristall</li><li>1× Zombiekopf</li><li>1× Skelettschädel</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/excal.png" alt="excalibur" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="exodus">
@@ -312,6 +326,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>5× Diamantblock</li><li>2× Goldene Karotte</li>
           <li>1× Verzauberter Goldener Apfel</li><li>1× Endkristall</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/exodus.png" alt="exodus" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="heavyaxe">
@@ -319,6 +334,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/heavyaxe give</div>
         <p class="desc">Fällt einen ganzen Baum mit einem einzigen Schlag.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>2× Stock</li><li>3× Schwerer Kern</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/heavyaxe.png" alt="heavyaxe" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="helios">
@@ -329,6 +345,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>6× Wiedergeburtanker</li><li>1× Netherstern</li>
           <li>1× Netheritrblock</li><li>1× Eisenschwert</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/helios.png" alt="helios" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="lifehelmet">
@@ -341,6 +358,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>1× Verstärkter Heiltrank (Sofortige Heilung II)</li>
           <li>1× Lebenskern</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/lifehelmet.png" alt="lifehelmet" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="hermes">
@@ -351,6 +369,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>2× Feder</li><li>2× Netheribarren</li><li>2× Lohenrute</li>
           <li>1× Leuchtfeuer</li><li>1× Netheritstiefel</li><li>1× TNT</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/hermes.png" alt="hermes" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="miner">
@@ -362,6 +381,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>2× Netheribarren</li><li>2× Hochofen</li><li>2× Herzensdes Meeres</li>
           <li>1× Netheritrspitzhacke</li><li>1× Lohenrute</li><li>1× Diamantblock</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/miner.png" alt="miner" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="netherstaff">
@@ -372,6 +392,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>2× Netherstern</li><li>1× Netheribarren</li>
           <li>1× Netheritrblock</li><li>1× Nether-Reaktorkern</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/staff.png" alt="netherstaff" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="ninjabow">
@@ -382,6 +403,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>3× Bogen</li><li>2× Amethystsplitter</li>
           <li>1× Lohenrute</li><li>3× Seidene Schnur</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/ninja.png" alt="ninjabow" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="pilotsword">
@@ -392,6 +414,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>5× Netherstern</li><li>1× Netheritritschwert (neu, volle Haltbarkeit, unverzaubert)</li>
           <li>2× Effizienz-V-Buch</li><li>1× Elytra</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/pilots.png" alt="pilotsword" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="plutonium">
@@ -401,6 +424,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>1× Netheritritschwert</li><li>2× Netherstern</li><li>6× Waffengradiges Plutonium</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/plutonium.png" alt="plutonium" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="poseidon">
@@ -410,6 +434,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>3× Dreizack</li><li>2× Herzensdes Meeres</li><li>2× Lohenrute</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/trident.png" alt="poseidon" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="scylla">
@@ -420,6 +445,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>1× Diamantbrustpanzer</li><li>4× Schwamm</li><li>2× Netheribarren</li>
           <li>2× Trank des Schildkrötenmeisters (verstärkt: Langsamkeit VI und Resistenz IV)</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/scylla.png" alt="scylla" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="shredded">
@@ -429,6 +455,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>1× Diamantblock</li><li>2× Knochen</li><li>3× Zombiekopf</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/shredded.png" alt="shredded" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="valkyrie">
@@ -438,6 +465,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>4× Eisenblock</li><li>1× Netheribarren</li><li>2× Stock</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/valk.png" alt="valkyrie" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="vampaxe">
@@ -447,6 +475,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>3× Netheritrstaxt</li><li>2× Redstoneblock</li><li>1× Wither-Skelett-Schädel</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/vampaxe.png" alt="vampaxe" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="warlock">
@@ -458,6 +487,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>1× Netheritrleggings</li><li>1× Magmacreme</li>
           <li>1× Diamantschwert (neu, volle Haltbarkeit, unverzaubert)</li><li>1× Endkristall</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/warlock.png" alt="warlock" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="witchsword">
@@ -474,6 +504,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>1× Lohenrute</li><li>1× Wither-Stab</li><li>3× Wither-Kopf</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/witherKingStaff.png" alt="witherkingstaff" loading="lazy"></div>
       </div>
     </div>
 
@@ -489,6 +520,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="recipe"><h4>Herstellungsrezept</h4><ul>
           <li>6× Feder</li><li>1× Amboss</li><li>1× Eisenblock</li><li>1× Eisenschwert</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/anduril.png" alt="anduril" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="coppersword">
@@ -496,6 +528,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/coppersword give</div>
         <p class="desc">Chance Feinde bis zu 4 Sekunden zu betäuben. Wird mit der Zeit schwächer durch Oxidation. Bienenwachs im Amboss verwenden zum Konservieren.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>8× Kupferblock</li><li>1× Eisenschwert</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/coppersword.png" alt="coppersword" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="fireball">
@@ -503,6 +536,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/fireball give</div>
         <p class="desc">Boom.</p>
         <div class="recipe"><h4>Herstellungsrezept (formlos)</h4><ul><li>1× TNT</li><li>1× Feuerkugel</li><li>1× Pfeil</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/fireball.png" alt="fireball" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="scorpionbow">
@@ -517,6 +551,7 @@ footer a { color:var(--accent); text-decoration:none; }
         <div class="cmd">/throwingknife give</div>
         <p class="desc">Werfbares Messer das 2 Herzen Schaden verursacht.</p>
         <div class="recipe"><h4>Herstellungsrezept</h4><ul><li>1× Eisenblock</li><li>1× Eisenschwert</li><li>1× Kolben</li></ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/throwingknife.png" alt="throwingknife" loading="lazy"></div>
       </div>
 
       <div class="weapon-card" id="witherstaff">
@@ -527,6 +562,7 @@ footer a { color:var(--accent); text-decoration:none; }
           <li>2× Lohenrute</li><li>1× Wither-Skelett-Schädel</li>
           <li>1× Feuerkugel</li><li>1× TNT</li>
         </ul></div>
+        <div class="weapon-img"><img src="https://github.com/greatericontop/weaponmaster/raw/main/assets/witherstaff.png" alt="witherstaff" loading="lazy"></div>
       </div>
     </div>
 
