@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minecraft – Guides & Infos | eberle.cc</title>
+<meta name="description" content="Minecraft Guides, Plugin-Dokumentationen und Infos auf Deutsch. WeaponMaster Plugin und mehr.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;--accent:#4f7fff;--accent2:#7c3aed;--text:#e8eaf0;--muted:#6b7280;--font:'Inter',system-ui,sans-serif;--radius:10px; }
+:root.light { --bg:#f0f2f7;--surface:#fff;--surface2:#e8ecf4;--border:#d0d6e8;--text:#1a1d2e; }
+body { background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh; }
+.navbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0.6rem 1.5rem;display:flex;align-items:center;gap:12px; }
+.nav-logo { font-weight:800;font-size:0.95rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+.nav-link { color:var(--muted);font-size:0.82rem;text-decoration:none; }
+.nav-link:hover { color:var(--text); }
+.nav-right { margin-left:auto; }
+.theme-btn { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer; }
+.hero { text-align:center;padding:4rem 1rem 2rem; }
+.hero h1 { font-size:2.5rem;font-weight:800;margin-bottom:0.5rem; }
+.hero p { color:var(--muted);font-size:1rem;max-width:500px;margin:0 auto; }
+.grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;max-width:900px;margin:2rem auto;padding:0 1rem; }
+.card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;text-decoration:none;color:var(--text);transition:border-color 0.2s,transform 0.15s;display:flex;flex-direction:column;gap:0.75rem; }
+.card:hover { border-color:var(--accent);transform:translateY(-2px); }
+.card-icon { font-size:2rem; }
+.card h2 { font-size:1rem;font-weight:700; }
+.card p { font-size:0.82rem;color:var(--muted);line-height:1.5; }
+.card-tag { display:inline-block;background:rgba(79,127,255,0.12);color:var(--accent);border-radius:4px;padding:2px 8px;font-size:0.72rem;font-weight:600;margin-top:auto;width:fit-content; }
+footer { text-align:center;padding:2rem;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border);margin-top:4rem; }
+footer a { color:var(--accent);text-decoration:none; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="nav-logo">eberle.cc</a>
+  <span style="color:var(--border)">›</span>
+  <span style="font-size:0.82rem;">Minecraft</span>
+  <div class="nav-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>🎮 Minecraft</h1>
+  <p>Guides, Plugin-Dokumentationen und Infos auf Deutsch</p>
+</div>
+
+<div class="grid">
+  <a class="card" href="/minecraft/weapons.html">
+    <div class="card-icon">⚔️</div>
+    <h2>WeaponMaster – Waffen & Items</h2>
+    <p>Vollständige deutsche Übersicht aller 77 Waffen, Rüstungen und Items des WeaponMaster Plugins für Minecraft 1.21+.</p>
+    <span class="card-tag">77 Items · Deutsch</span>
+  </a>
+  <a class="card" href="/minecraft/map.html">
+    <div class="card-icon">🗺️</div>
+    <h2>Minecraft Karte</h2>
+    <p>Interaktive Karte der Minecraft-Welt mit wichtigen Punkten und Koordinaten.</p>
+    <span class="card-tag">Karte</span>
+  </a>
+</div>
+
+<footer>
+  © Sesemi GmbH · <a href="/impressum.html">Impressum & Datenschutz</a>
+</footer>
+<script>
+function toggleTheme(){const isL=document.documentElement.classList.toggle('light');localStorage.setItem('stl3mf-theme',isL?'light':'dark');document.getElementById('theme-btn').textContent=isL?'☀️':'🌙';}
+const saved=localStorage.getItem('stl3mf-theme');if(saved==='light'||(saved===null&&window.matchMedia('(prefers-color-scheme: light)').matches)){document.documentElement.classList.add('light');document.getElementById('theme-btn').textContent='☀️';}
+</script>
+</body>
+</html>
