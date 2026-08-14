@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minecraft Karte | eberle.cc</title>
+<meta name="description" content="Interaktive Minecraft-Karte mit Koordinaten und wichtigen Punkten.">
+<style>
+* { box-sizing:border-box;margin:0;padding:0; }
+:root { --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;--accent:#4f7fff;--accent2:#7c3aed;--text:#e8eaf0;--muted:#6b7280;--font:'Inter',system-ui,sans-serif;--radius:10px; }
+:root.light { --bg:#f0f2f7;--surface:#fff;--surface2:#e8ecf4;--border:#d0d6e8;--text:#1a1d2e; }
+body { background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh; }
+.navbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0.6rem 1.5rem;display:flex;align-items:center;gap:12px; }
+.nav-logo { font-weight:800;font-size:0.95rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none; }
+.nav-link { color:var(--muted);font-size:0.82rem;text-decoration:none; }
+.nav-link:hover { color:var(--text); }
+.nav-sep { color:var(--border); }
+.nav-right { margin-left:auto;display:flex;gap:8px;align-items:center; }
+.theme-btn { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer; }
+.back-btn { background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:0.75rem;text-decoration:none; }
+.container { max-width:900px;margin:0 auto;padding:2rem 1rem 4rem; }
+h1 { font-size:1.8rem;font-weight:800;margin-bottom:0.5rem; }
+.subtitle { color:var(--muted);font-size:0.9rem;margin-bottom:2rem; }
+.placeholder { background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--radius);padding:4rem 2rem;text-align:center; }
+.placeholder p { color:var(--muted);font-size:0.9rem;margin-top:1rem; }
+.placeholder .icon { font-size:3rem; }
+footer { text-align:center;padding:2rem;font-size:0.75rem;color:var(--muted);border-top:1px solid var(--border);margin-top:4rem; }
+footer a { color:var(--accent);text-decoration:none; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/index.html" class="nav-logo">eberle.cc</a>
+  <span class="nav-sep">›</span>
+  <a href="/minecraft/index.html" class="nav-link">Minecraft</a>
+  <span class="nav-sep">›</span>
+  <span style="font-size:0.82rem;">Karte</span>
+  <div class="nav-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+    <a href="/minecraft/index.html" class="back-btn">← Minecraft</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>🗺️ Minecraft Karte</h1>
+  <p class="subtitle">Interaktive Karte der Minecraft-Welt</p>
+
+  <div class="placeholder">
+    <div class="icon">🗺️</div>
+    <p>Die Karte wird noch eingerichtet.<br>Bitte bald wieder vorbeischauen!</p>
+  </div>
+</div>
+
+<footer>
+  © Sesemi GmbH · <a href="/impressum.html">Impressum & Datenschutz</a>
+</footer>
+<script>
+function toggleTheme(){const isL=document.documentElement.classList.toggle('light');localStorage.setItem('stl3mf-theme',isL?'light':'dark');document.getElementById('theme-btn').textContent=isL?'☀️':'🌙';}
+const saved=localStorage.getItem('stl3mf-theme');if(saved==='light'||(saved===null&&window.matchMedia('(prefers-color-scheme: light)').matches)){document.documentElement.classList.add('light');document.getElementById('theme-btn').textContent='☀️';}
+</script>
+</body>
+</html>
