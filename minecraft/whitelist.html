@@ -116,6 +116,21 @@ footer a { color:var(--accent);text-decoration:none; }
     <div class="status" id="status"></div>
   </div>
 
+  <!-- Manual XUID input -->
+  <div class="card">
+    <div class="card-title">XUID manuell eingeben</div>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:0.75rem;">Falls die automatische Suche keine XUID findet, hier direkt eingeben.</p>
+    <div class="input-row">
+      <input type="text" id="xuid-manual-input" placeholder="z.B. 2533274881254275"
+        autocomplete="off" spellcheck="false" style="font-family:monospace;"
+        onkeydown="if(event.key==='Enter')generateFromXuid()">
+      <input type="text" id="name-manual-input" placeholder="Gamertag (optional)"
+        autocomplete="off" spellcheck="false" style="max-width:180px;">
+      <button class="search-btn" onclick="generateFromXuid()">Generieren</button>
+    </div>
+    <div class="status" id="xuid-manual-status"></div>
+  </div>
+
   <!-- Results -->
   <div id="results" style="display:none;">
 
@@ -312,7 +327,26 @@ async function lookupPlayer() {
     }
 
     if (!xuid) {
-      setStatus('❌ Spieler nicht gefunden. Bitte Gamertag prüfen.', 'error');
+      // Try third fallback: xbl.io public API
+      try {
+        const res = await fetch(`https://xbl.io/api/v2/friends/search?gt=${encodeURIComponent(gamertag)}`, {
+          headers: { 'X-Authorization': '' }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const profile = data.profileUsers?.[0];
+          if (profile) {
+            xuid = String(profile.id);
+            playerName = gamertag;
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (!xuid) {
+      setStatus('❌ Spieler nicht gefunden. Bitte Gamertag prüfen oder manuell auf ' +
+        '<a href="https://xboxgamertagfinder.com/" target="_blank" style="color:var(--accent)">xboxgamertagfinder.com</a> ' +
+        'oder <a href="https://www.craftmc.net/tools/player-lookup?edition=bedrock&username=' + encodeURIComponent(gamertag) + '" target="_blank" style="color:var(--accent)">CraftMC</a> suchen.', 'error-html');
       btn.disabled = false;
       return;
     }
@@ -365,13 +399,31 @@ function showResults(name, xuid) {
 
 function setStatus(msg, type) {
   const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = 'status ' + (type || '');
+  if (type === 'error-html') {
+    el.innerHTML = msg;
+    el.className = 'status error';
+  } else {
+    el.textContent = msg;
+    el.className = 'status ' + (type || '');
+  }
 }
 
 function copyVal(id, btn) {
   const text = document.getElementById(id).textContent;
   copyText(text, btn);
+}
+
+function generateFromXuid() {
+  const xuid = document.getElementById('xuid-manual-input').value.trim();
+  const name = document.getElementById('name-manual-input').value.trim() || 'unknown';
+  const statusEl = document.getElementById('xuid-manual-status');
+
+  if (!xuid) { statusEl.textContent = 'Bitte XUID eingeben.'; statusEl.className='status error'; return; }
+  if (!/^\d+$/.test(xuid)) { statusEl.textContent = '❌ XUID muss eine reine Zahl sein.'; statusEl.className='status error'; return; }
+  if (xuid.length < 10 || xuid.length > 20) { statusEl.textContent = '❌ XUID hat ungewöhnliche Länge — bitte prüfen.'; statusEl.className='status error'; return; }
+
+  statusEl.textContent = '✓ Commands generiert!'; statusEl.className='status ok';
+  showResults(name, xuid);
 }
 
 function onUuidInput() {
