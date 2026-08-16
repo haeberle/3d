@@ -145,6 +145,10 @@ footer a { color:var(--accent);text-decoration:none; }
             <span class="badge-bedrock">Bedrock</span>
           </div>
           <div class="player-xuid" id="player-xuid-display"></div>
+          <a id="craftmc-link" href="#" target="_blank"
+            style="display:none;align-items:center;gap:5px;margin-top:6px;font-size:0.75rem;color:var(--accent);text-decoration:none;">
+            🔗 Auf CraftMC anzeigen →
+          </a>
         </div>
       </div>
     </div>
@@ -283,6 +287,19 @@ function hexToFloodgateUUID(hex) {
 }
 
 // ── Player lookup ────────────────────────────────────────────────
+function generateFromXuid() {
+  const xuid = document.getElementById('xuid-manual-input').value.trim();
+  const name = document.getElementById('name-manual-input').value.trim() || 'unknown';
+  const statusEl = document.getElementById('xuid-manual-status');
+
+  if (!xuid) { statusEl.textContent = 'Bitte XUID eingeben.'; statusEl.className='status error'; return; }
+  if (!/^\d+$/.test(xuid)) { statusEl.textContent = '❌ XUID muss eine reine Zahl sein.'; statusEl.className='status error'; return; }
+  if (xuid.length < 10 || xuid.length > 20) { statusEl.textContent = '❌ XUID hat ungewöhnliche Länge — bitte prüfen.'; statusEl.className='status error'; return; }
+
+  statusEl.textContent = '✓ Commands generiert!'; statusEl.className='status ok';
+  showResults(name, xuid);
+}
+
 async function lookupPlayer() {
   const input = document.getElementById('gamertag-input').value.trim();
   if (!input) { setStatus('Bitte Gamertag oder UUID eingeben.', 'error'); return; }
@@ -383,6 +400,10 @@ function showResults(name, xuid, precomputedUuid) {
   // Player info
   document.getElementById('player-name').textContent = name;
   document.getElementById('player-xuid-display').textContent = 'XUID: ' + xuid;
+  // CraftMC direct link with UUID
+  const craftmcLinkUrl = `https://www.craftmc.net/tools/player-lookup?edition=bedrock&username=${encodeURIComponent(uuid)}`;
+  const craftmcEl = document.getElementById('craftmc-link');
+  if(craftmcEl) { craftmcEl.href = craftmcLinkUrl; craftmcEl.style.display = 'inline-flex'; }
   // Avatar from Geyser (Bedrock skin service)
   document.getElementById('player-avatar').src = `https://mc-heads.net/avatar/${name}/40`;
   document.getElementById('player-avatar').onerror = function(){ this.src='https://mc-heads.net/avatar/MHF_Steve/40'; };
@@ -406,6 +427,8 @@ function showResults(name, xuid, precomputedUuid) {
   document.getElementById('cmd-fwhitelist-remove-uuid').textContent = `/fwhitelist remove ${uuid}`;
   document.getElementById('warn-uuid').textContent = uuid;
   document.getElementById('player-xuid-display').textContent = 'XUID: ' + xuid;
+  // CraftMC direct link with UUID
+
 
   document.getElementById('results').style.display = 'block';
   document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
@@ -427,18 +450,6 @@ function copyVal(id, btn) {
   copyText(text, btn);
 }
 
-function generateFromXuid() {
-  const xuid = document.getElementById('xuid-manual-input').value.trim();
-  const name = document.getElementById('name-manual-input').value.trim() || 'unknown';
-  const statusEl = document.getElementById('xuid-manual-status');
-
-  if (!xuid) { statusEl.textContent = 'Bitte XUID eingeben.'; statusEl.className='status error'; return; }
-  if (!/^\d+$/.test(xuid)) { statusEl.textContent = '❌ XUID muss eine reine Zahl sein.'; statusEl.className='status error'; return; }
-  if (xuid.length < 10 || xuid.length > 20) { statusEl.textContent = '❌ XUID hat ungewöhnliche Länge — bitte prüfen.'; statusEl.className='status error'; return; }
-
-  statusEl.textContent = '✓ Commands generiert!'; statusEl.className='status ok';
-  showResults(name, xuid);
-}
 
 function onUuidInput() {
   document.getElementById('uuid-remove-results').style.display = 'none';
