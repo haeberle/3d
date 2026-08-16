@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bedrock Whitelist Manager | eberle.cc</title>
+<style>
+* { box-sizing:border-box;margin:0;padding:0; }
+:root { --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3350;--accent:#4f7fff;--accent2:#7c3aed;--text:#e8eaf0;--muted:#6b7280;--success:#22c55e;--error:#ef4444;--warn:#f39c12;--font:'Inter',system-ui,sans-serif;--radius:10px; }
+:root.light { --bg:#f0f2f7;--surface:#fff;--surface2:#e8ecf4;--border:#d0d6e8;--text:#1a1d2e;--muted:#6b7280; }
+body { background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh; }
+
+.navbar { background:var(--surface);border-bottom:1px solid var(--border);padding:0.6rem 1.5rem;display:flex;align-items:center;gap:12px; }
+.nav-logo { font-weight:800;font-size:0.95rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none; }
+.nav-sep { color:var(--border); }
+.nav-right { margin-left:auto; }
+.theme-btn { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer; }
+
+.container { max-width:680px;margin:0 auto;padding:2rem 1rem 4rem; }
+h1 { font-size:1.6rem;font-weight:800;margin-bottom:0.3rem; }
+.subtitle { color:var(--muted);font-size:0.85rem;margin-bottom:2rem; }
+
+.card { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem; }
+.card-title { font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:1rem; }
+
+/* Input */
+.input-row { display:flex;gap:8px;margin-bottom:0.5rem; }
+.input-row input { flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:0.9rem;font-family:var(--font);transition:border-color 0.15s; }
+.input-row input:focus { outline:none;border-color:var(--accent); }
+.input-row input::placeholder { color:var(--muted); }
+.search-btn { background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:0.85rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity 0.15s; }
+.search-btn:hover { opacity:0.9; }
+.search-btn:disabled { opacity:0.5;cursor:not-allowed; }
+
+/* Prefix input */
+.prefix-row { display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted); }
+.prefix-row input { background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.8rem;width:60px;font-family:monospace; }
+
+/* Status */
+.status { font-size:0.8rem;padding:6px 0;min-height:24px; }
+.status.loading { color:var(--accent); }
+.status.error { color:var(--error); }
+.status.ok { color:var(--success); }
+
+/* Result steps */
+.steps { display:flex;flex-direction:column;gap:0.75rem; }
+.step { background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem; }
+.step-header { display:flex;align-items:center;gap:8px;margin-bottom:0.6rem; }
+.step-num { background:var(--accent);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0; }
+.step-title { font-size:0.8rem;font-weight:600; }
+.step-val { font-family:monospace;font-size:0.82rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;word-break:break-all;display:flex;align-items:center;justify-content:space-between;gap:8px; }
+.step-val span { flex:1; }
+.copy-btn { background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 8px;font-size:0.72rem;cursor:pointer;flex-shrink:0;transition:border-color 0.15s,color 0.15s; }
+.copy-btn:hover { border-color:var(--accent);color:var(--text); }
+.copy-btn.copied { border-color:var(--success);color:var(--success); }
+
+/* Command highlight */
+.cmd-block { font-family:monospace;font-size:0.88rem;background:var(--bg);border:1.5px solid var(--accent);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:0.4rem; }
+.cmd-block span { flex:1;color:var(--accent); }
+.cmd-block .copy-btn { border-color:var(--accent);color:var(--accent); }
+
+/* Warning box */
+.warn-box { background:rgba(243,156,18,0.1);border:1px solid var(--warn);border-radius:8px;padding:0.75rem 1rem;font-size:0.8rem;color:var(--warn);margin-top:0.5rem;line-height:1.5; }
+.warn-box strong { display:block;margin-bottom:3px; }
+
+/* JSON preview */
+.json-box { background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:monospace;font-size:0.8rem;line-height:1.6;white-space:pre;overflow-x:auto;margin-top:0.5rem; }
+.json-key { color:#9cdcfe; }
+.json-str { color:#ce9178; }
+.json-punct { color:var(--muted); }
+
+/* Remove section */
+.remove-section { margin-top:0.5rem; }
+.remove-section .cmd-block span { color:var(--error); }
+.remove-section .cmd-block { border-color:var(--error); }
+
+/* Player info */
+.player-info { display:flex;align-items:center;gap:12px;padding:0.75rem 0; }
+.player-avatar { width:40px;height:40px;border-radius:6px;border:1px solid var(--border); }
+.player-name { font-weight:600;font-size:0.95rem; }
+.player-xuid { font-size:0.75rem;color:var(--muted);font-family:monospace; }
+.badge-bedrock { background:rgba(79,127,255,0.15);color:var(--accent);border-radius:4px;padding:2px 7px;font-size:0.68rem;font-weight:700; }
+
+footer { text-align:center;padding:2rem;font-size:0.72rem;color:var(--muted);border-top:1px solid var(--border);margin-top:2rem; }
+footer a { color:var(--accent);text-decoration:none; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="nav-logo">eberle.cc</a>
+  <span class="nav-sep">›</span>
+  <span style="font-size:0.82rem;">Bedrock Whitelist</span>
+  <div class="nav-right">
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<div class="container">
+  <h1>🎮 Bedrock Whitelist Manager</h1>
+  <p class="subtitle">Floodgate-UUID aus Gamertag berechnen und Commands für Purpur generieren</p>
+
+  <!-- Input -->
+  <div class="card">
+    <div class="card-title">Bedrock Gamertag eingeben</div>
+    <div class="input-row">
+      <input type="text" id="gamertag-input" placeholder="z.B. FredFromJupiter" autocomplete="off" spellcheck="false"
+        onkeydown="if(event.key==='Enter')lookupPlayer()">
+      <button class="search-btn" id="search-btn" onclick="lookupPlayer()">🔍 Suchen</button>
+    </div>
+    <div class="prefix-row">
+      <span>Floodgate Prefix:</span>
+      <input type="text" id="prefix-input" value="." maxlength="5" spellcheck="false">
+      <span style="color:var(--muted);font-size:0.75rem;">(Standard: Punkt)</span>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none;">
+
+    <!-- Player info -->
+    <div class="card">
+      <div class="card-title">Spieler</div>
+      <div class="player-info">
+        <img id="player-avatar" class="player-avatar" src="" alt="Avatar">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="player-name" id="player-name"></span>
+            <span class="badge-bedrock">Bedrock</span>
+          </div>
+          <div class="player-xuid" id="player-xuid-display"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calculation steps -->
+    <div class="card">
+      <div class="card-title">Berechnung</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-header"><div class="step-num">1</div><div class="step-title">XUID (Dezimal)</div></div>
+          <div class="step-val"><span id="step-xuid"></span><button class="copy-btn" onclick="copyVal('step-xuid',this)">Kopieren</button></div>
+        </div>
+        <div class="step">
+          <div class="step-header"><div class="step-num">2</div><div class="step-title">XUID → Hexadezimal (16 Stellen)</div></div>
+          <div class="step-val"><span id="step-hex"></span><button class="copy-btn" onclick="copyVal('step-hex',this)">Kopieren</button></div>
+        </div>
+        <div class="step">
+          <div class="step-header"><div class="step-num">3</div><div class="step-title">Floodgate UUID</div></div>
+          <div class="step-val"><span id="step-uuid"></span><button class="copy-btn" onclick="copyVal('step-uuid',this)">Kopieren</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add commands -->
+    <div class="card">
+      <div class="card-title">Commands — Spieler hinzufügen</div>
+
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.5rem;">Option A: Floodgate-Befehl</div>
+      <div class="cmd-block">
+        <span id="cmd-fwhitelist"></span>
+        <button class="copy-btn" onclick="copyVal('cmd-fwhitelist',this)">Kopieren</button>
+      </div>
+
+      <div style="font-size:0.8rem;color:var(--muted);margin:1rem 0 0.5rem;">Option B: Vanilla Whitelist mit UUID</div>
+      <div class="cmd-block">
+        <span id="cmd-whitelist-add"></span>
+        <button class="copy-btn" onclick="copyVal('cmd-whitelist-add',this)">Kopieren</button>
+      </div>
+
+      <div class="warn-box" style="margin-top:1rem;">
+        <strong>⚠️ Nach dem Add: whitelist.json prüfen</strong>
+        Falls dort <code>"name": "unknown"</code> steht, manuell auf den richtigen Namen mit Prefix setzen:
+      </div>
+
+      <div class="json-box" id="json-correct"></div>
+
+      <div style="font-size:0.8rem;color:var(--muted);margin:0.75rem 0 0.4rem;">Danach Reload:</div>
+      <div class="cmd-block">
+        <span>/whitelist reload</span>
+        <button class="copy-btn" onclick="copyText('/whitelist reload',this)">Kopieren</button>
+      </div>
+    </div>
+
+    <!-- Remove commands -->
+    <div class="card">
+      <div class="card-title">Commands — Spieler entfernen</div>
+      <div class="remove-section">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">Option A: Per Name mit Prefix</div>
+        <div class="cmd-block" style="border-color:var(--error);">
+          <span style="color:var(--error);" id="cmd-remove-name"></span>
+          <button class="copy-btn" style="border-color:var(--error);color:var(--error);" onclick="copyVal('cmd-remove-name',this)">Kopieren</button>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin:0.75rem 0 0.4rem;">Option B: Floodgate via Name</div>
+        <div class="cmd-block" style="border-color:var(--error);">
+          <span style="color:var(--error);" id="cmd-fwhitelist-remove"></span>
+          <button class="copy-btn" style="border-color:var(--error);color:var(--error);" onclick="copyVal('cmd-fwhitelist-remove',this)">Kopieren</button>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin:0.75rem 0 0.4rem;">Option C: Floodgate via UUID</div>
+        <div class="cmd-block" style="border-color:var(--error);">
+          <span style="color:var(--error);" id="cmd-fwhitelist-remove-uuid"></span>
+          <button class="copy-btn" style="border-color:var(--error);color:var(--error);" onclick="copyVal('cmd-fwhitelist-remove-uuid',this)">Kopieren</button>
+        </div>
+        <div class="warn-box">
+          <strong>⚠️ Wenn Name noch "unknown" ist</strong>
+          whitelist.json öffnen, Eintrag mit UUID <code id="warn-uuid"></code> manuell löschen, dann <code>/whitelist reload</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Remove by UUID -->
+    <div class="card">
+      <div class="card-title">Spieler per UUID entfernen</div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">UUID direkt eingeben um Entfern-Commands zu generieren — nützlich wenn der Name unbekannt ist.</p>
+      <div class="input-row">
+        <input type="text" id="uuid-input" placeholder="00000000-0000-0000-0009-0000056a6383"
+          autocomplete="off" spellcheck="false"
+          style="font-family:monospace;font-size:0.82rem;"
+          oninput="onUuidInput()">
+        <button class="search-btn" onclick="generateUuidRemove()">Generieren</button>
+      </div>
+      <div class="status" id="uuid-status"></div>
+      <div id="uuid-remove-results" style="display:none;margin-top:0.75rem;">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;">Via Floodgate:</div>
+        <div class="cmd-block" style="border-color:var(--error);">
+          <span style="color:var(--error);" id="uuid-cmd-fwhitelist"></span>
+          <button class="copy-btn" style="border-color:var(--error);color:var(--error);" onclick="copyVal('uuid-cmd-fwhitelist',this)">Kopieren</button>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);margin:0.75rem 0 0.4rem;">Via Vanilla Whitelist:</div>
+        <div class="cmd-block" style="border-color:var(--error);">
+          <span style="color:var(--error);" id="uuid-cmd-whitelist"></span>
+          <button class="copy-btn" style="border-color:var(--error);color:var(--error);" onclick="copyVal('uuid-cmd-whitelist',this)">Kopieren</button>
+        </div>
+        <div class="warn-box" style="margin-top:0.75rem;">
+          <strong>⚠️ Falls Commands nicht funktionieren</strong>
+          whitelist.json öffnen, Eintrag mit dieser UUID suchen und manuell löschen, dann <code>/whitelist reload</code>.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  © Sesemi GmbH · <a href="/impressum.html">Impressum & Datenschutz</a><br>
+  XUID-Lookup via <a href="https://www.craftmc.net" target="_blank">CraftMC</a>
+</footer>
+
+<script>
+// ── Theme ────────────────────────────────────────────────────────
+function toggleTheme(){const isL=document.documentElement.classList.toggle('light');localStorage.setItem('stl3mf-theme',isL?'light':'dark');document.getElementById('theme-btn').textContent=isL?'☀️':'🌙';}
+const saved=localStorage.getItem('stl3mf-theme');if(saved==='light'||(saved===null&&window.matchMedia('(prefers-color-scheme: light)').matches)){document.documentElement.classList.add('light');document.getElementById('theme-btn').textContent='☀️';}
+
+// ── XUID → Hex → UUID ───────────────────────────────────────────
+function xuidToHex(xuid) {
+  // Convert decimal string to BigInt then to 16-char hex
+  const n = BigInt(xuid);
+  return n.toString(16).padStart(16, '0');
+}
+
+function hexToFloodgateUUID(hex) {
+  // Format: 00000000-0000-0000-XXXX-XXXXXXXXXXXX
+  // hex is 16 chars: first 4 → group4, last 12 → group5
+  const g4 = hex.substring(0, 4);
+  const g5 = hex.substring(4);
+  return `00000000-0000-0000-${g4}-${g5}`;
+}
+
+// ── Player lookup ────────────────────────────────────────────────
+async function lookupPlayer() {
+  const gamertag = document.getElementById('gamertag-input').value.trim();
+  if (!gamertag) { setStatus('Bitte Gamertag eingeben.', 'error'); return; }
+
+  const btn = document.getElementById('search-btn');
+  btn.disabled = true;
+  setStatus('🔍 Suche Spieler...', 'loading');
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    // Use CraftMC API
+    const url = `https://www.craftmc.net/tools/player-lookup?edition=bedrock&username=${encodeURIComponent(gamertag)}`;
+    
+    // We fetch via a CORS proxy since CraftMC doesn't have open API
+    // Alternative: use Xbox/Geyser lookup
+    // Try direct fetch first
+    let xuid = null;
+    let playerName = gamertag;
+
+    // Try craftmc.net API endpoint
+    try {
+      const res = await fetch(`https://api.geysermc.org/v2/xbox/xuid/${encodeURIComponent(gamertag)}`);
+      if (res.ok) {
+        const data = await res.json();
+        xuid = String(data.xuid);
+        playerName = gamertag;
+      }
+    } catch(e) {}
+
+    if (!xuid) {
+      // Fallback: try playerdb
+      try {
+        const res = await fetch(`https://playerdb.co/api/player/xbox/${encodeURIComponent(gamertag)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data?.player) {
+            xuid = String(data.data.player.id);
+            playerName = data.data.player.username || gamertag;
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (!xuid) {
+      setStatus('❌ Spieler nicht gefunden. Bitte Gamertag prüfen.', 'error');
+      btn.disabled = false;
+      return;
+    }
+
+    showResults(playerName, xuid);
+    setStatus(`✓ Spieler gefunden!`, 'ok');
+
+  } catch(e) {
+    setStatus('❌ Fehler: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+}
+
+function showResults(name, xuid) {
+  const prefix = document.getElementById('prefix-input').value || '.';
+  const hex = xuidToHex(xuid);
+  const uuid = hexToFloodgateUUID(hex);
+  const prefixedName = prefix + name;
+
+  // Player info
+  document.getElementById('player-name').textContent = name;
+  document.getElementById('player-xuid-display').textContent = 'XUID: ' + xuid;
+  // Avatar from Geyser (Bedrock skin service)
+  document.getElementById('player-avatar').src = `https://mc-heads.net/avatar/${name}/40`;
+  document.getElementById('player-avatar').onerror = function(){ this.src='https://mc-heads.net/avatar/MHF_Steve/40'; };
+
+  // Steps
+  document.getElementById('step-xuid').textContent = xuid;
+  document.getElementById('step-hex').textContent = hex;
+  document.getElementById('step-uuid').textContent = uuid;
+
+  // Add commands
+  document.getElementById('cmd-fwhitelist').textContent = `/fwhitelist add ${uuid}`;
+  document.getElementById('cmd-whitelist-add').textContent = `/whitelist add ${uuid}`;
+
+  // JSON preview
+  document.getElementById('json-correct').innerHTML =
+    `<span class="json-punct">[</span>\n  <span class="json-punct">{</span>\n    <span class="json-key">"uuid"</span><span class="json-punct">: </span><span class="json-str">"${uuid}"</span><span class="json-punct">,</span>\n    <span class="json-key">"name"</span><span class="json-punct">: </span><span class="json-str">"${prefixedName}"</span>\n  <span class="json-punct">}</span>\n<span class="json-punct">]</span>`;
+
+  // Remove commands
+  document.getElementById('cmd-remove-name').textContent = `/whitelist remove ${prefixedName}`;
+  document.getElementById('cmd-fwhitelist-remove').textContent = `/fwhitelist remove ${name}`;
+  document.getElementById('cmd-fwhitelist-remove-uuid').textContent = `/fwhitelist remove ${uuid}`;
+  document.getElementById('warn-uuid').textContent = uuid;
+  document.getElementById('player-xuid-display').textContent = 'XUID: ' + xuid;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + (type || '');
+}
+
+function copyVal(id, btn) {
+  const text = document.getElementById(id).textContent;
+  copyText(text, btn);
+}
+
+function onUuidInput() {
+  document.getElementById('uuid-remove-results').style.display = 'none';
+  document.getElementById('uuid-status').textContent = '';
+}
+
+function generateUuidRemove() {
+  const uuid = document.getElementById('uuid-input').value.trim();
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid) { document.getElementById('uuid-status').textContent = 'Bitte UUID eingeben.'; document.getElementById('uuid-status').className='status error'; return; }
+  if (!uuidRegex.test(uuid)) { document.getElementById('uuid-status').textContent = '❌ Ungültige UUID — Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'; document.getElementById('uuid-status').className='status error'; return; }
+
+  // Extract XUID part from Floodgate UUID (last 12 hex chars of group 4+5)
+  const parts = uuid.split('-');
+  const hex16 = parts[3] + parts[4]; // 4 + 12 = 16 chars
+  document.getElementById('uuid-cmd-fwhitelist').textContent = `/fwhitelist remove ${uuid}`;
+  document.getElementById('uuid-cmd-whitelist').textContent = `/whitelist remove ${uuid}`;
+  document.getElementById('uuid-remove-results').style.display = 'block';
+  document.getElementById('uuid-status').textContent = '✓ Commands generiert';
+  document.getElementById('uuid-status').className = 'status ok';
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+</script>
+</body>
+</html>
