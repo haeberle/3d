@@ -102,9 +102,9 @@ footer a { color:var(--accent);text-decoration:none; }
 
   <!-- Input -->
   <div class="card">
-    <div class="card-title">Bedrock Gamertag eingeben</div>
+    <div class="card-title">Bedrock Gamertag oder Floodgate-UUID eingeben</div>
     <div class="input-row">
-      <input type="text" id="gamertag-input" placeholder="z.B. FredFromJupiter" autocomplete="off" spellcheck="false"
+      <input type="text" id="gamertag-input" placeholder="z.B. FredFromJupiter oder 00000000-0000-0000-0009-0000056a6383" autocomplete="off" spellcheck="false"
         onkeydown="if(event.key==='Enter')lookupPlayer()">
       <button class="search-btn" id="search-btn" onclick="lookupPlayer()">🔍 Suchen</button>
     </div>
@@ -284,25 +284,39 @@ function hexToFloodgateUUID(hex) {
 
 // ── Player lookup ────────────────────────────────────────────────
 async function lookupPlayer() {
-  const gamertag = document.getElementById('gamertag-input').value.trim();
-  if (!gamertag) { setStatus('Bitte Gamertag eingeben.', 'error'); return; }
+  const input = document.getElementById('gamertag-input').value.trim();
+  if (!input) { setStatus('Bitte Gamertag oder UUID eingeben.', 'error'); return; }
 
   const btn = document.getElementById('search-btn');
   btn.disabled = true;
-  setStatus('🔍 Suche Spieler...', 'loading');
   document.getElementById('results').style.display = 'none';
 
+  // Detect if input is a Floodgate UUID
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(input)) {
+    // UUID input → reverse-engineer XUID and show commands directly
+    setStatus('🔍 UUID erkannt — berechne XUID...', 'loading');
+    const parts = input.split('-');
+    const hex16 = parts[3] + parts[4]; // 4+12 = 16 hex chars
+    try {
+      const xuid = String(BigInt('0x' + hex16));
+      showResults('unknown', xuid, input);
+      setStatus('✓ Commands aus UUID generiert!', 'ok');
+    } catch(e) {
+      setStatus('❌ UUID konnte nicht verarbeitet werden.', 'error');
+    }
+    btn.disabled = false;
+    return;
+  }
+
+  const gamertag = input;
+  setStatus('🔍 Suche Spieler...', 'loading');
+
   try {
-    // Use CraftMC API
-    const url = `https://www.craftmc.net/tools/player-lookup?edition=bedrock&username=${encodeURIComponent(gamertag)}`;
-    
-    // We fetch via a CORS proxy since CraftMC doesn't have open API
-    // Alternative: use Xbox/Geyser lookup
-    // Try direct fetch first
     let xuid = null;
     let playerName = gamertag;
 
-    // Try craftmc.net API endpoint
+    // Try GeyserMC API
     try {
       const res = await fetch(`https://api.geysermc.org/v2/xbox/xuid/${encodeURIComponent(gamertag)}`);
       if (res.ok) {
@@ -360,10 +374,10 @@ async function lookupPlayer() {
   btn.disabled = false;
 }
 
-function showResults(name, xuid) {
+function showResults(name, xuid, precomputedUuid) {
   const prefix = document.getElementById('prefix-input').value || '.';
   const hex = xuidToHex(xuid);
-  const uuid = hexToFloodgateUUID(hex);
+  const uuid = precomputedUuid || hexToFloodgateUUID(hex);
   const prefixedName = prefix + name;
 
   // Player info
